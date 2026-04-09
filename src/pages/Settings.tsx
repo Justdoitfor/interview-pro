@@ -40,95 +40,6 @@ export default function Settings() {
     }
   };
 
-  const handleImport = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    setIsImporting(true);
-    const reader = new FileReader();
-    reader.onload = async (e) => {
-      try {
-        const content = e.target?.result as string;
-        const parsed = JSON.parse(content);
-        
-        if (parsed.questions && Array.isArray(parsed.questions)) {
-          const now = Date.now();
-          const existingIds = new Set(questions.map(q => q.id));
-
-          let importedCount = 0;
-          let skippedCount = 0;
-
-          const toAdd: any[] = [];
-          const toUpdate: any[] = [];
-
-          parsed.questions.forEach((q: any) => {
-            const masteryLevel = Number(q.masteryLevel);
-            const normQ = {
-              ...q,
-              title: String(q.title || '').trim(),
-              content: String(q.content || ''),
-              answer: String(q.answer || ''),
-              tags: Array.isArray(q.tags) ? q.tags.map((t: any) => String(t)) : [],
-              difficulty: q.difficulty === 'easy' || q.difficulty === 'hard' ? q.difficulty : 'medium',
-              masteryLevel: masteryLevel === 1 || masteryLevel === 2 ? masteryLevel : 0,
-              lastReviewedAt: typeof q.lastReviewedAt === 'number' ? q.lastReviewedAt : 0,
-              reviewCount: typeof q.reviewCount === 'number' ? q.reviewCount : 0,
-              nextReviewAt: typeof q.nextReviewAt === 'number' ? q.nextReviewAt : 0,
-              intervalDays: typeof q.intervalDays === 'number' ? q.intervalDays : 0,
-              easeFactor: typeof q.easeFactor === 'number' ? q.easeFactor : 2.5,
-              createdAt: typeof q.createdAt === 'number' ? q.createdAt : now,
-              updatedAt: typeof q.updatedAt === 'number' ? q.updatedAt : now
-            };
-
-            const qId = normQ.id || uuidv4();
-
-            if (existingIds.has(qId)) {
-              if (importStrategy === 'skip') {
-                skippedCount++;
-              } else if (importStrategy === 'overwrite') {
-                normQ.id = qId;
-                toUpdate.push({ id: qId, changes: normQ });
-                importedCount++;
-              } else if (importStrategy === 'new_id') {
-                normQ.id = uuidv4();
-                toAdd.push(normQ);
-                importedCount++;
-              }
-            } else {
-              normQ.id = qId;
-              toAdd.push(normQ);
-              importedCount++;
-            }
-          });
-
-          if (toAdd.length > 0) await bulkAddQuestions(toAdd);
-          if (toUpdate.length > 0) await bulkUpdateQuestions(toUpdate);
-
-          alert(`成功导入 ${importedCount} 道题目！${skippedCount > 0 ? `(跳过 ${skippedCount} 道冲突题目)` : ''}`);
-        } else {
-          alert('无效的备份文件格式');
-        }
-      } catch (error) {
-        console.error('导入失败', error);
-        alert('解析文件失败。请确保它是一个有效的 JSON 备份。');
-      } finally {
-        setIsImporting(false);
-        event.target.value = '';
-      }
-    };
-    reader.readAsText(file);
-  };
-
-  const handleClearData = async () => {
-    if (window.confirm('警告：此操作将永久删除所有本地题目和练习历史记录！\n\n您确定要继续吗？')) {
-      const confirmText = window.prompt('输入 "DELETE" 确认：');
-      if (confirmText === 'DELETE') {
-        await clearData();
-        alert('所有数据已被清除。');
-      }
-    }
-  };
-
   const handlePushToCloud = async () => {
     if (!githubToken) return alert('请先配置 GitHub Token');
     try {
@@ -246,51 +157,27 @@ export default function Settings() {
           </div>
         </div>
 
-        <div className="p-8 border-b border-slate-200/50 dark:border-white/5">
+        <div className="p-8">
           <div className="flex items-center gap-4 mb-8">
             <div className="p-4 bg-blue-500/10 rounded-2xl">
               <Database className="w-8 h-8 text-blue-600 dark:text-blue-400" />
             </div>
             <div>
-              <h2 className="text-2xl font-display font-bold text-slate-900 dark:text-white">备份与恢复</h2>
-              <p className="text-slate-500 dark:text-slate-400 mt-1">所有数据都本地存储在您的浏览器中。我们强烈建议定期导出备份。</p>
+              <h2 className="text-2xl font-display font-bold text-slate-900 dark:text-white">本地备份导出</h2>
+              <p className="text-slate-500 dark:text-slate-400 mt-1">您可以随时将题库数据导出为 JSON 文件保存在本地。</p>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-            <button
-              onClick={handleExport}
-              disabled={isExporting}
-              className="flex items-center justify-center p-6 border-2 border-slate-200 dark:border-white/10 rounded-2xl hover:border-blue-500/50 dark:hover:border-blue-500/50 hover:bg-blue-50/50 dark:hover:bg-blue-500/10 transition-all group disabled:opacity-50"
-            >
-              <Download className="w-6 h-6 mr-3 text-slate-400 group-hover:text-blue-500 transition-colors" />
-              <span className="text-lg font-bold text-slate-700 dark:text-slate-300 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
-                {isExporting ? '导出中...' : '导出备份 (JSON)'}
-              </span>
-            </button>
-
-            <div className="flex flex-col gap-4 p-6 border-2 border-slate-200 dark:border-white/10 rounded-2xl transition-all">
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-bold text-slate-600 dark:text-slate-400">导入策略 (ID 冲突时)</span>
-                <select
-                  value={importStrategy}
-                  onChange={(e) => setImportStrategy(e.target.value as any)}
-                  className="px-3 py-1.5 bg-white dark:bg-[#111] border border-slate-200 dark:border-white/10 rounded-lg text-sm font-medium outline-none text-slate-700 dark:text-slate-300 cursor-pointer"
-                >
-                  <option value="skip">跳过不导入</option>
-                  <option value="overwrite">覆盖原有数据</option>
-                  <option value="new_id">生成新ID导入</option>
-                </select>
-              </div>
-              <label className="flex items-center justify-center p-4 bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/30 rounded-xl hover:bg-emerald-100 dark:hover:bg-emerald-500/20 transition-all group cursor-pointer disabled:opacity-50 mt-auto">
-                <Upload className="w-5 h-5 mr-2 text-emerald-600 dark:text-emerald-400" />
-                <span className="font-bold text-emerald-700 dark:text-emerald-400 transition-colors">
-                  {isImporting ? '导入中...' : '选择 JSON 备份导入'}
-                </span>
-                <input type="file" accept=".json" className="hidden" onChange={handleImport} disabled={isImporting} />
-              </label>
-            </div>
-          </div>
+          <button
+            onClick={handleExport}
+            disabled={isExporting}
+            className="flex items-center justify-center p-6 border-2 border-slate-200 dark:border-white/10 rounded-2xl hover:border-blue-500/50 dark:hover:border-blue-500/50 hover:bg-blue-50/50 dark:hover:bg-blue-500/10 transition-all group disabled:opacity-50 w-full md:w-1/2"
+          >
+            <Download className="w-6 h-6 mr-3 text-slate-400 group-hover:text-blue-500 transition-colors" />
+            <span className="text-lg font-bold text-slate-700 dark:text-slate-300 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+              {isExporting ? '导出中...' : '导出备份 (JSON)'}
+            </span>
+          </button>
         </div>
 
         <div className="p-8 bg-rose-50/50 dark:bg-rose-500/5">

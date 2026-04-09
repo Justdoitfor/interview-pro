@@ -59,6 +59,11 @@ export default function PracticeSession() {
 
       qList = shuffle(qList);
       setQuestions(qList);
+      
+      if (qList.length > 0) {
+        setIsFlipped(qList[0].reviewCount === 0);
+      }
+      
       setIsLoading(false);
     };
     loadQuestions();
@@ -99,7 +104,8 @@ export default function PracticeSession() {
     });
 
     if (currentIndex < questions.length - 1) {
-      setIsFlipped(false);
+      const nextQ = questions[currentIndex + 1];
+      setIsFlipped(nextQ.reviewCount === 0);
       setCurrentIndex(prev => prev + 1);
     } else {
       setIsFinished(true);
@@ -190,7 +196,7 @@ export default function PracticeSession() {
             animate={{ opacity: 1, scale: 1, rotateY: 0, filter: "blur(0px)" }}
             exit={{ opacity: 0, scale: 1.05, rotateY: isFlipped ? 10 : -10, filter: "blur(4px)" }}
             transition={{ duration: 0.4, ease: [0.23, 1, 0.32, 1] }}
-            className="w-full max-w-4xl aspect-[4/3] max-h-[75vh] perspective-1000"
+            className="w-full max-w-[1400px] min-h-[60vh] max-h-[85vh] perspective-1000"
           >
             <div className={clsx(
               "w-full h-full rounded-[2rem] shadow-2xl flex flex-col overflow-hidden relative",

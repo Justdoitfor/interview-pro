@@ -171,7 +171,7 @@ export default function Dashboard() {
           <div className="space-y-6">
             <div className="group">
               <div className="flex justify-between text-sm mb-2">
-                <span className="font-medium text-slate-700 dark:text-slate-300">已掌握 (2)</span>
+                <span className="font-medium text-slate-700 dark:text-slate-300">已掌握</span>
                 <span className="font-bold text-slate-900 dark:text-white">{stats.mastered}</span>
               </div>
               <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-2 overflow-hidden">
@@ -185,7 +185,7 @@ export default function Dashboard() {
             </div>
             <div className="group">
               <div className="flex justify-between text-sm mb-2">
-                <span className="font-medium text-slate-700 dark:text-slate-300">学习中 (1)</span>
+                <span className="font-medium text-slate-700 dark:text-slate-300">学习中</span>
                 <span className="font-bold text-slate-900 dark:text-white">{stats.learning}</span>
               </div>
               <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-2 overflow-hidden">
@@ -199,7 +199,7 @@ export default function Dashboard() {
             </div>
             <div className="group">
               <div className="flex justify-between text-sm mb-2">
-                <span className="font-medium text-slate-700 dark:text-slate-300">新题目 (0)</span>
+                <span className="font-medium text-slate-700 dark:text-slate-300">新题目</span>
                 <span className="font-bold text-slate-900 dark:text-white">{stats.newCount}</span>
               </div>
               <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-2 overflow-hidden">

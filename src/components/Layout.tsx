@@ -1,11 +1,11 @@
 import { Outlet, NavLink } from 'react-router-dom';
 import { useAppStore } from '../store';
-import { LayoutDashboard, Library, PlayCircle, Settings, Sun, Moon, Sparkles, PanelLeftClose, PanelLeft } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { LayoutDashboard, Library, PlayCircle, Settings, Sun, Moon, Sparkles, PanelLeftClose, PanelLeft, Cloud, CloudOff, RefreshCw } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import clsx from 'clsx';
 
 export default function Layout() {
-  const { sidebarOpen, toggleSidebar, theme, toggleTheme } = useAppStore();
+  const { sidebarOpen, toggleSidebar, theme, toggleTheme, isSyncing, githubToken, gistId, syncError } = useAppStore();
 
   const navItems = [
     { to: '/', icon: LayoutDashboard, label: '控制台' },
@@ -23,20 +23,24 @@ export default function Layout() {
           sidebarOpen ? "w-64" : "w-20"
         )}
       >
-        <div className="flex items-center justify-between h-20 px-6 border-b border-slate-200/50 dark:border-white/5">
-          {sidebarOpen && (
-            <span className="text-xl font-display font-bold text-slate-900 dark:text-white flex items-center gap-3">
-              <span className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center text-white shadow-lg shadow-emerald-500/20">
-                <Sparkles className="w-5 h-5" />
-              </span>
-              面试通
-            </span>
-          )}
-          {!sidebarOpen && (
-            <span className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center text-white mx-auto shadow-lg shadow-emerald-500/20">
+        <div className="flex items-center justify-between h-20 px-6 border-b border-slate-200/50 dark:border-white/5 relative">
+          <div className="flex items-center gap-3">
+            <span className="w-10 h-10 shrink-0 rounded-xl bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center text-white shadow-lg shadow-emerald-500/20 mx-auto">
               <Sparkles className="w-5 h-5" />
             </span>
-          )}
+            <AnimatePresence>
+              {sidebarOpen && (
+                <motion.span 
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -10 }}
+                  className="text-xl font-display font-bold text-slate-900 dark:text-white whitespace-nowrap"
+                >
+                  面试通
+                </motion.span>
+              )}
+            </AnimatePresence>
+          </div>
         </div>
 
         <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
@@ -72,6 +76,41 @@ export default function Layout() {
         </nav>
 
         <div className="p-4 border-t border-slate-200/50 dark:border-white/5 space-y-2">
+          {/* Cloud Sync Status */}
+          <div 
+            className="flex items-center justify-center w-full p-3 rounded-2xl transition-all group relative cursor-default"
+            title={
+              !githubToken ? '未配置云端同步' :
+              isSyncing ? '正在同步到云端...' :
+              syncError ? `同步失败: ${syncError}` :
+              '云端同步已开启'
+            }
+          >
+            {isSyncing ? (
+              <RefreshCw className="w-5 h-5 text-blue-500 animate-spin" />
+            ) : syncError ? (
+              <CloudOff className="w-5 h-5 text-rose-500" />
+            ) : githubToken ? (
+              <Cloud className="w-5 h-5 text-emerald-500" />
+            ) : (
+              <CloudOff className="w-5 h-5 text-slate-400" />
+            )}
+            
+            {sidebarOpen && (
+              <span className={clsx(
+                "ml-3 font-medium whitespace-nowrap text-sm",
+                isSyncing ? "text-blue-500" :
+                syncError ? "text-rose-500" :
+                githubToken ? "text-emerald-600 dark:text-emerald-400" :
+                "text-slate-500 dark:text-slate-400"
+              )}>
+                {isSyncing ? '正在同步...' : syncError ? '同步失败' : githubToken ? '云端已同步' : '未开启同步'}
+              </span>
+            )}
+          </div>
+
+          <div className="h-px bg-slate-200/50 dark:bg-white/5 my-2" />
+
           <button
             onClick={toggleSidebar}
             className="flex items-center justify-center w-full p-3 rounded-2xl text-slate-500 hover:bg-slate-100/50 dark:text-slate-400 dark:hover:bg-white/5 transition-all group"

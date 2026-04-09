@@ -21,11 +21,13 @@ interface AppState {
   questions: Question[];
   isInitializing: boolean;
   isSyncing: boolean;
+  lastSyncTime: number | null;
   syncError: string | null;
 
   // Actions
   fetchFromCloud: () => Promise<void>;
   syncToCloud: () => Promise<void>;
+  triggerAutoSync: () => void;
   
   // CRUD
   addQuestion: (q: Question) => Promise<void>;
@@ -54,6 +56,7 @@ export const useAppStore = create<AppState>()(
       questions: [],
       isInitializing: false,
       isSyncing: false,
+      lastSyncTime: null,
       syncError: null,
 
       fetchFromCloud: async () => {
@@ -64,7 +67,7 @@ export const useAppStore = create<AppState>()(
         try {
           const payload = await pullFromGist(githubToken, gistId);
           if (payload && Array.isArray(payload.questions)) {
-            set({ questions: payload.questions });
+            set({ questions: payload.questions, lastSyncTime: Date.now() });
           }
         } catch (error: any) {
           set({ syncError: error.message || '拉取数据失败' });
@@ -83,7 +86,9 @@ export const useAppStore = create<AppState>()(
           const payload = { version: 2, questions };
           const newGistId = await pushToGist(githubToken, gistId, payload);
           if (!gistId && newGistId) {
-            set({ gistId: newGistId });
+            set({ gistId: newGistId, lastSyncTime: Date.now() });
+          } else {
+            set({ lastSyncTime: Date.now() });
           }
         } catch (error: any) {
           set({ syncError: error.message || '同步失败' });
@@ -93,28 +98,39 @@ export const useAppStore = create<AppState>()(
         }
       },
 
+      triggerAutoSync: () => {
+        // Clear any existing timeout
+        if ((window as any).syncTimeout) {
+          clearTimeout((window as any).syncTimeout);
+        }
+        // Set new timeout for 30 seconds
+        (window as any).syncTimeout = setTimeout(() => {
+          get().syncToCloud();
+        }, 30000);
+      },
+
       addQuestion: async (q) => {
         set((state) => ({ questions: [...state.questions, q] }));
-        await get().syncToCloud();
+        get().triggerAutoSync();
       },
 
       updateQuestion: async (id, changes) => {
         set((state) => ({
           questions: state.questions.map((q) => (q.id === id ? { ...q, ...changes } : q)),
         }));
-        await get().syncToCloud();
+        get().triggerAutoSync();
       },
 
       deleteQuestion: async (id) => {
         set((state) => ({
           questions: state.questions.filter((q) => q.id !== id),
         }));
-        await get().syncToCloud();
+        get().triggerAutoSync();
       },
 
       bulkAddQuestions: async (qs) => {
         set((state) => ({ questions: [...state.questions, ...qs] }));
-        await get().syncToCloud();
+        get().triggerAutoSync();
       },
 
       bulkUpdateQuestions: async (updates) => {
@@ -129,7 +145,7 @@ export const useAppStore = create<AppState>()(
             })
           };
         });
-        await get().syncToCloud();
+        get().triggerAutoSync();
       },
 
       bulkDeleteQuestions: async (ids) => {
@@ -137,17 +153,17 @@ export const useAppStore = create<AppState>()(
         set((state) => ({
           questions: state.questions.filter((q) => !idSet.has(q.id)),
         }));
-        await get().syncToCloud();
+        get().triggerAutoSync();
       },
 
       setQuestions: async (qs) => {
         set({ questions: qs });
-        await get().syncToCloud();
+        get().triggerAutoSync();
       },
 
       clearData: async () => {
         set({ questions: [] });
-        await get().syncToCloud();
+        get().triggerAutoSync();
       },
     }),
     {

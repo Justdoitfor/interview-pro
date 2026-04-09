@@ -19,7 +19,6 @@
 ## 🚀 快速开始
 
 ### 1. 环境要求
-
 - Node.js (推荐 v18 或以上)
 - pnpm (推荐，或使用 npm / yarn)
 
@@ -40,7 +39,6 @@ pnpm run dev
 ### 4. 部署到 GitHub Pages
 
 项目已内置了 GitHub Actions 工作流（`.github/workflows/deploy.yml`）。
-
 1. 将本项目推送到您自己的 GitHub 仓库。
 2. 在仓库的 `Settings` -> `Pages` 中，将 `Source` 设置为 `GitHub Actions`。
 3. 提交代码到 `main` 分支后，GitHub 会自动为您构建并部署静态页面。

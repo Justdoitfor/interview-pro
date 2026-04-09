@@ -123,6 +123,9 @@ export default function QuestionEditor() {
     setValue('tags', tags.filter(t => t !== tagToRemove));
   };
 
+  const allTags = Array.from(new Set(questions.flatMap(q => q.tags)));
+  const suggestedTags = allTags.filter(t => !tags.includes(t) && t.toLowerCase().includes(tagInput.toLowerCase()));
+
   return (
     <motion.div 
       initial={{ opacity: 0, y: 20 }}
@@ -204,6 +207,25 @@ export default function QuestionEditor() {
                       placeholder="添加标签..."
                     />
                   </div>
+                  {/* Tag Suggestions */}
+                  {suggestedTags.length > 0 && (
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      <span className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider py-1">建议标签:</span>
+                      {suggestedTags.slice(0, 10).map(tag => (
+                        <button
+                          key={tag}
+                          type="button"
+                          onClick={() => {
+                            setValue('tags', [...tags, tag]);
+                            setTagInput('');
+                          }}
+                          className="px-3 py-1 bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-300 rounded-lg text-xs font-bold hover:bg-emerald-50 dark:hover:bg-emerald-500/10 hover:text-emerald-600 dark:hover:text-emerald-400 hover:border-emerald-200 dark:hover:border-emerald-500/30 transition-all"
+                        >
+                          + {tag}
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
 
