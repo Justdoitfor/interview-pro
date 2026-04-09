@@ -1,10 +1,11 @@
-# 面试通 (Interview Pro) - 本地沉浸式刷题系统
+# 面试通 (Interview Pro) - 轻量级云端沉浸式刷题系统
 
-基于 React 18、Vite、TypeScript、Tailwind CSS 和 Dexie.js 构建的完全本地化的面试题管理与刷题平台。所有数据均存储在您的浏览器 IndexedDB 中，无需后端服务器，保证您的数据隐私与离线可用性。
+基于 React 18、Vite、TypeScript、Tailwind CSS 和 Zustand 构建的轻量级面试题管理与刷题平台。它利用 **纯内存运行 + GitHub Gist 私有云同步** 作为数据存储方案，摆脱了对浏览器缓存（IndexedDB）的依赖，既保证了极快的响应速度，又解决了清缓存/换设备导致数据丢失的痛点。您可以将它一键部署到 GitHub Pages 等任意静态托管平台。
 
 ## ✨ 核心特性
 
-- **完全本地化**：基于 Dexie.js (IndexedDB) 存储，数据不出浏览器，无需注册登录。
+- **脱离本地缓存依赖**：数据不再绑定于浏览器的 IndexedDB。运行时完全基于内存 (Zustand)，每次访问都会自动从您私有的 GitHub Gist 拉取题库。
+- **云端无缝同步**：任何题库变动（新增、修改、刷题记录改变）都会实时或手动同步到您的私有 GitHub Gist 中，数据永远在您自己的掌控之下，并且跨设备完美同步。
 - **现代 UI 体验**：使用 Tailwind CSS 结合 Framer Motion 打造高级的玻璃拟态（Glassmorphism）和流畅的动效，支持亮色/暗色模式无缝切换。
 - **沉浸式刷题**：
   - **间隔重复算法（SM-2 简化版）**：根据您的掌握程度（未掌握、模糊、熟练）智能安排下一次复习时间。
@@ -18,6 +19,7 @@
 ## 🚀 快速开始
 
 ### 1. 环境要求
+
 - Node.js (推荐 v18 或以上)
 - pnpm (推荐，或使用 npm / yarn)
 
@@ -35,17 +37,26 @@ pnpm run dev
 
 启动后，访问终端中提示的地址（通常是 `http://localhost:5173` 或 `http://localhost:5174`）。
 
-### 4. 构建生产版本
+### 4. 部署到 GitHub Pages
 
-```bash
-pnpm run build
-```
+项目已内置了 GitHub Actions 工作流（`.github/workflows/deploy.yml`）。
 
-构建完成后，产物将生成在 `dist` 目录中。您可以使用任何静态服务器（如 `serve`、`nginx`、`caddy`）来托管这些静态文件。
+1. 将本项目推送到您自己的 GitHub 仓库。
+2. 在仓库的 `Settings` -> `Pages` 中，将 `Source` 设置为 `GitHub Actions`。
+3. 提交代码到 `main` 分支后，GitHub 会自动为您构建并部署静态页面。
 
-```bash
-npx serve -s dist
-```
+## ☁️ 如何使用 GitHub Gist 云端同步功能
+
+为了防止换电脑或清理缓存后题库丢失，请按以下步骤配置您的私有云端同步：
+
+1. **获取 Token**：登录您的 GitHub 账号，进入 `Settings` -> `Developer settings` -> `Personal access tokens (Tokens (classic))`，点击 `Generate new token`，**勾选 `gist` 权限**，生成一段以 `ghp_` 开头的 Token 字符串。
+2. **初始化题库**：
+   - 访问您部署好的网页版面试通。
+   - 点击左侧边栏的 **数据设置**。
+   - 在“云端同步 (GitHub Gist)”区域，填入您刚才生成的 Token。
+   - `Gist ID` 留空，直接点击 **“首次创建云端备份”**。
+   - 成功后，系统会自动为您生成并保存一个新的 Gist ID。此时您的应用已与云端完成绑定。
+3. **跨设备使用**：在其他设备上访问网页时，只要在设置里填入相同的 Token 和 Gist ID，点击 **“从云端覆盖到本地”**，您的完整题库就会瞬间同步下来。日常修改后，系统也会自动向该 Gist 发起推送更新。
 
 ## 🛠️ 技术栈
 
@@ -53,17 +64,10 @@ npx serve -s dist
 - **语言**：TypeScript
 - **样式**：Tailwind CSS
 - **动画**：Framer Motion
-- **数据库**：Dexie.js (IndexedDB)
-- **状态管理**：Zustand
+- **状态管理**：Zustand (内存状态 + GitHub Gist 数据持久化)
 - **图标**：Lucide React
 - **Markdown**：react-markdown, remark-gfm, highlight.js
 - **Excel/CSV 解析**：xlsx
-
-## 💡 使用小贴士
-
-1. **数据备份**：由于数据存储在浏览器的 IndexedDB 中，如果您清除了浏览器缓存或使用了无痕模式，数据将会丢失。**请务必养成定期前往“数据设置”页面导出 JSON 备份的习惯。**
-2. **批量导入**：在“题库管理”页面点击“批量上传”可以选择 Excel 或 CSV 文件导入。请确保您的表格包含 `题目名称` 和 `答案与解析` 这两列，`难度` 和 `标签` 为选填。
-3. **标签分隔**：导入或批量追加标签时，多个标签请使用逗号（中英文皆可）进行分隔。
 
 ---
 
