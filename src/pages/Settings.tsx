@@ -1,24 +1,18 @@
 import { useState } from 'react';
-import { Download, Upload, AlertTriangle, Database, Cloud, Key, FileJson, Github } from 'lucide-react';
-import { v4 as uuidv4 } from 'uuid';
+import { Download, Upload, Database, Cloud, Key, Github, CloudOff } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useAppStore } from '../store';
 import { pushToGist, pullFromGist } from '../services/githubSync';
 
 export default function Settings() {
   const [isExporting, setIsExporting] = useState(false);
-  const [isImporting, setIsImporting] = useState(false);
-  const [importStrategy, setImportStrategy] = useState<'overwrite' | 'skip' | 'new_id'>('skip');
 
   // Github Gist Sync states
   const { githubToken, gistId, setGithubToken, setGistId } = useAppStore();
   const [isSyncing, setIsSyncing] = useState(false);
 
   const questions = useAppStore(state => state.questions);
-  const bulkAddQuestions = useAppStore(state => state.bulkAddQuestions);
-  const bulkUpdateQuestions = useAppStore(state => state.bulkUpdateQuestions);
   const setQuestions = useAppStore(state => state.setQuestions);
-  const clearData = useAppStore(state => state.clearData);
 
   const handleExport = async () => {
     setIsExporting(true);
@@ -177,25 +171,6 @@ export default function Settings() {
             <span className="text-lg font-bold text-slate-700 dark:text-slate-300 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
               {isExporting ? '导出中...' : '导出备份 (JSON)'}
             </span>
-          </button>
-        </div>
-
-        <div className="p-8 bg-rose-50/50 dark:bg-rose-500/5">
-          <div className="flex items-center gap-4 mb-6">
-            <div className="p-4 bg-rose-100/80 dark:bg-rose-500/20 rounded-2xl">
-              <AlertTriangle className="w-8 h-8 text-rose-600 dark:text-rose-400" />
-            </div>
-            <div>
-              <h2 className="text-2xl font-display font-bold text-rose-900 dark:text-rose-400">危险区域</h2>
-              <p className="text-rose-600/80 dark:text-rose-400/80 mt-1">此处的操作将永久删除数据。请谨慎操作。</p>
-            </div>
-          </div>
-          
-          <button
-            onClick={handleClearData}
-            className="px-6 py-3 bg-white dark:bg-[#111] border border-rose-200 dark:border-rose-900/50 text-rose-600 dark:text-rose-400 rounded-xl hover:bg-rose-50 dark:hover:bg-rose-900/20 transition-colors font-bold shadow-sm"
-          >
-            清除所有本地数据
           </button>
         </div>
       </div>
