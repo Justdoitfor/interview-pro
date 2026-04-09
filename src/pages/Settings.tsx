@@ -17,7 +17,17 @@ export default function Settings() {
   const handleExport = async () => {
     setIsExporting(true);
     try {
-      const dataStr = JSON.stringify({ version: 2, questions }, null, 2);
+      const exportData = questions.map(q => ({
+        ...q,
+        // 添加易读的时间字符串辅助字段，不影响原有时间戳字段
+        _createdAtStr: new Date(q.createdAt).toLocaleString(),
+        _updatedAtStr: new Date(q.updatedAt).toLocaleString(),
+        _lastReviewedAtStr: q.lastReviewedAt ? new Date(q.lastReviewedAt).toLocaleString() : '',
+        _nextReviewAtStr: q.nextReviewAt ? new Date(q.nextReviewAt).toLocaleString() : '',
+        easeFactor: Number(q.easeFactor.toFixed(2))
+      }));
+      
+      const dataStr = JSON.stringify({ version: 2, questions: exportData }, null, 2);
       const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
       
       const exportFileDefaultName = `interview-questions-backup-${new Date().toISOString().slice(0,10)}.json`;

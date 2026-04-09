@@ -93,6 +93,9 @@ export default function PracticeSession() {
       intervalDays = interval0 <= 0 ? 3 : Math.max(1, Math.round(interval0 * easeFactor));
     }
 
+    // 保留两位小数
+    easeFactor = Number(easeFactor.toFixed(2));
+
     await updateQuestion(currentQuestion.id, {
       masteryLevel: level,
       lastReviewedAt: now,
@@ -209,7 +212,7 @@ export default function PracticeSession() {
       </header>
 
       {/* Main Flashcard Area */}
-      <main className="flex-1 flex flex-col items-center justify-start p-4 md:p-6 overflow-hidden relative z-10 w-full max-w-[1400px] mx-auto mt-4 md:mt-8">
+      <main className="flex-1 flex flex-col items-center justify-center p-4 md:p-6 overflow-hidden relative z-10 w-full max-w-[1400px] mx-auto py-4 md:py-8">
         <AnimatePresence mode="wait">
           <motion.div
             key={currentQuestion.id + (isFlipped ? '-back' : '-front')}
@@ -242,7 +245,7 @@ export default function PracticeSession() {
                         </span>
                       ))}
                     </div>
-                    <h2 className="text-4xl md:text-5xl font-display font-bold text-center text-slate-900 dark:text-white mb-8 leading-tight">
+                    <h2 className="text-3xl md:text-4xl font-display font-bold text-center text-slate-900 dark:text-white mb-8 leading-tight">
                       {currentQuestion.title}
                     </h2>
                     {currentQuestion.content && (
