@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Question } from '../types';
-import { X, RefreshCcw, Check, XCircle, Sparkles } from 'lucide-react';
+import { X, RefreshCcw, Check, XCircle, Sparkles, ChevronLeft } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -168,18 +168,39 @@ export default function PracticeSession() {
   }
 
   return (
-    <div className="min-h-screen bg-[#fafafa] dark:bg-[#0a0a0a] flex flex-col noise-bg">
+    <div className="min-h-screen bg-[#fafafa] dark:bg-[#0a0a0a] flex flex-col noise-bg overflow-hidden">
       {/* Header */}
-      <header className="h-20 flex items-center justify-between px-4 md:px-8 border-b border-slate-200/50 dark:border-white/5 bg-white/50 dark:bg-[#0a0a0a]/50 backdrop-blur-xl z-10 w-full max-w-[1200px] mx-auto">
-        <div className="flex items-center gap-6">
-          <button onClick={() => navigate('/practice')} className="p-3 text-slate-500 hover:bg-slate-200/50 dark:hover:bg-white/5 rounded-full transition-colors">
-            <X className="w-6 h-6" />
-          </button>
-          <div className="text-sm font-medium text-slate-500 dark:text-slate-400 tracking-widest uppercase">
-            {currentIndex + 1} / {questions.length}
+      <header className="h-20 flex flex-col justify-center px-4 md:px-8 border-b border-slate-200/50 dark:border-white/5 bg-white/50 dark:bg-[#0a0a0a]/50 backdrop-blur-xl z-20 w-full max-w-[1400px] mx-auto">
+        <div className="flex items-center justify-between w-full mb-3 mt-2">
+          <div className="flex items-center gap-2">
+            <button onClick={() => navigate('/practice')} className="p-2 text-slate-500 hover:bg-slate-200/50 dark:hover:bg-white/5 rounded-full transition-colors" title="退出练习">
+              <X className="w-6 h-6" />
+            </button>
+            {currentIndex > 0 && (
+              <button 
+                onClick={() => {
+                  const prevQ = questions[currentIndex - 1];
+                  setCurrentIndex(prev => prev - 1);
+                  setIsFlipped(prevQ.reviewCount === 0);
+                }} 
+                className="flex items-center px-3 py-1.5 text-sm font-bold text-slate-600 dark:text-slate-300 bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 rounded-full transition-colors"
+              >
+                <ChevronLeft className="w-4 h-4 mr-1" />
+                上一题
+              </button>
+            )}
+          </div>
+          
+          {/* Progress Indicator Combined */}
+          <div className="flex items-center gap-3">
+            <div className="text-sm font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 px-3 py-1 rounded-full">
+              {currentIndex + 1} <span className="opacity-50">/</span> {questions.length}
+            </div>
           </div>
         </div>
-        <div className="w-48 md:w-64 h-1.5 bg-slate-200 dark:bg-white/10 rounded-full overflow-hidden">
+        
+        {/* Progress Bar Container */}
+        <div className="w-full h-1.5 bg-slate-200 dark:bg-white/10 rounded-full overflow-hidden shrink-0">
           <div 
             className="h-full bg-emerald-500 transition-all duration-500 ease-out"
             style={{ width: `${((currentIndex + 1) / questions.length) * 100}%` }}
@@ -188,7 +209,7 @@ export default function PracticeSession() {
       </header>
 
       {/* Main Flashcard Area */}
-      <main className="flex-1 flex flex-col items-center justify-center p-6 md:p-10 overflow-hidden relative z-10">
+      <main className="flex-1 flex flex-col items-center justify-start p-4 md:p-6 overflow-hidden relative z-10 w-full max-w-[1400px] mx-auto mt-4 md:mt-8">
         <AnimatePresence mode="wait">
           <motion.div
             key={currentQuestion.id + (isFlipped ? '-back' : '-front')}
@@ -196,7 +217,7 @@ export default function PracticeSession() {
             animate={{ opacity: 1, scale: 1, rotateY: 0, filter: "blur(0px)" }}
             exit={{ opacity: 0, scale: 1.05, rotateY: isFlipped ? 10 : -10, filter: "blur(4px)" }}
             transition={{ duration: 0.4, ease: [0.23, 1, 0.32, 1] }}
-            className="w-full max-w-[1400px] min-h-[60vh] max-h-[85vh] perspective-1000"
+            className="w-full flex-1 max-h-[85vh] perspective-1000 flex flex-col"
           >
             <div className={clsx(
               "w-full h-full rounded-[2rem] shadow-2xl flex flex-col overflow-hidden relative",
