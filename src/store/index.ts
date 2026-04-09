@@ -99,14 +99,7 @@ export const useAppStore = create<AppState>()(
       },
 
       triggerAutoSync: () => {
-        // Clear any existing timeout
-        if ((window as any).syncTimeout) {
-          clearTimeout((window as any).syncTimeout);
-        }
-        // Set new timeout for 30 seconds
-        (window as any).syncTimeout = setTimeout(() => {
-          get().syncToCloud();
-        }, 30000);
+        get().syncToCloud();
       },
 
       addQuestion: async (q) => {

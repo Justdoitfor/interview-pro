@@ -212,7 +212,7 @@ export default function PracticeSession() {
       </header>
 
       {/* Main Flashcard Area */}
-      <main className="flex-1 flex flex-col items-center justify-start p-4 md:p-6 overflow-hidden relative z-10 w-full max-w-[1400px] mx-auto pb-6">
+      <main className="flex-1 relative overflow-hidden z-10 w-full max-w-[1400px] mx-auto">
         <AnimatePresence mode="wait">
           <motion.div
             key={currentQuestion.id + (isFlipped ? '-back' : '-front')}
@@ -220,7 +220,7 @@ export default function PracticeSession() {
             animate={{ opacity: 1, scale: 1, rotateY: 0, filter: "blur(0px)" }}
             exit={{ opacity: 0, scale: 1.05, rotateY: isFlipped ? 10 : -10, filter: "blur(4px)" }}
             transition={{ duration: 0.4, ease: [0.23, 1, 0.32, 1] }}
-            className="w-full h-full perspective-1000 flex flex-col"
+            className="absolute inset-4 md:inset-6 perspective-1000 flex flex-col"
           >
             <div className={clsx(
               "w-full h-full rounded-[2rem] shadow-2xl flex flex-col overflow-hidden relative",
