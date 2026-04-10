@@ -249,14 +249,6 @@ export default function QuestionList() {
     setSelectedIds(new Set());
   };
 
-  const handleBulkDelete = async () => {
-    if (selectedIds.size === 0) return;
-    if (window.confirm(`确定要删除选中的 ${selectedIds.size} 道题目吗？此操作不可恢复。`)) {
-      await bulkDeleteQuestions(Array.from(selectedIds));
-      setSelectedIds(new Set());
-    }
-  };
-
   const handleBulkChangeDifficulty = async (difficulty: 'easy' | 'medium' | 'hard') => {
     if (selectedIds.size === 0) return;
     const now = Date.now();
@@ -343,69 +335,11 @@ export default function QuestionList() {
 
       <div className="glass-panel rounded-3xl overflow-hidden w-full">
         {selectedIds.size > 0 && (
-          <div className="bg-emerald-50 dark:bg-emerald-500/10 px-6 py-4 flex items-center justify-between border-b border-emerald-200/50 dark:border-emerald-500/20">
-            <span className="text-emerald-700 dark:text-emerald-400 font-bold">已选择 {selectedIds.size} 项</span>
-            <div className="flex items-center gap-3">
-              <select
-                onChange={(e) => {
-                  const val = e.target.value;
-                  if (val) {
-                    handleBulkChangeDifficulty(val as any);
-                    e.target.value = '';
-                  }
-                }}
-                className="px-3 py-1.5 bg-white dark:bg-[#111] border border-emerald-200 dark:border-emerald-500/30 text-emerald-700 dark:text-emerald-400 rounded-lg text-sm font-medium outline-none cursor-pointer"
-              >
-                <option value="">修改难度...</option>
-                <option value="easy">设为简单</option>
-                <option value="medium">设为中等</option>
-                <option value="hard">设为困难</option>
-              </select>
-              <button
-                onClick={handleBulkAddTags}
-                className="px-4 py-1.5 bg-white dark:bg-[#111] border border-emerald-200 dark:border-emerald-500/30 text-emerald-700 dark:text-emerald-400 rounded-lg text-sm font-bold hover:bg-emerald-100 dark:hover:bg-emerald-500/20 transition-colors"
-              >
-                追加标签
-              </button>
-              <button
-                onClick={handleBulkDelete}
-                className="flex items-center px-4 py-1.5 bg-rose-50 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/30 text-rose-600 dark:text-rose-400 rounded-lg text-sm font-bold hover:bg-rose-100 dark:hover:bg-rose-500/20 transition-colors"
-              >
-                <Trash className="w-4 h-4 mr-1.5" />
-                批量删除
-              </button>
-            </div>
-          </div>
-        )}
-        <div className="p-6 border-b border-slate-200/50 dark:border-white/5 flex flex-col sm:flex-row gap-4 bg-white/50 dark:bg-slate-900/50">
-          <div className="relative flex-1 group">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-emerald-500 transition-colors" />
-            <input
-              type="text"
-              placeholder="搜索题目或标签..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-12 pr-4 py-3 bg-white dark:bg-[#111] border border-slate-200 dark:border-white/10 rounded-xl text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 outline-none transition-all shadow-sm"
-            />
-          </div>
-          <select
-            value={filterDifficulty}
-            onChange={(e) => setFilterDifficulty(e.target.value)}
-            className="px-4 py-3 bg-white dark:bg-[#111] border border-slate-200 dark:border-white/10 rounded-xl text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500/50 outline-none transition-all cursor-pointer shadow-sm min-w-[140px]"
-          >
-            <option value="all">所有难度</option>
-            <option value="easy">简单</option>
-            <option value="medium">中等</option>
-            <option value="hard">困难</option>
-          </select>
-        </div>
-
-        {selectedIds.size > 0 && (
-          <div className="px-6 py-4 border-b border-emerald-200/50 dark:border-emerald-500/20 bg-emerald-50 dark:bg-emerald-500/10 flex items-center justify-between">
+          <div className="px-6 py-4 border-b border-emerald-200/50 dark:border-emerald-500/20 bg-emerald-50 dark:bg-emerald-500/10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="text-sm font-bold text-emerald-700 dark:text-emerald-400">
               已选择 {selectedIds.size} 项
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center gap-3">
               <select
                 onChange={(e) => {
                   const val = e.target.value;
@@ -437,6 +371,29 @@ export default function QuestionList() {
             </div>
           </div>
         )}
+
+        <div className="p-6 border-b border-slate-200/50 dark:border-white/5 flex flex-col sm:flex-row gap-4 bg-white/50 dark:bg-slate-900/50">
+          <div className="relative flex-1 group">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-emerald-500 transition-colors" />
+            <input
+              type="text"
+              placeholder="搜索题目或标签..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full pl-12 pr-4 py-3 bg-white dark:bg-[#111] border border-slate-200 dark:border-white/10 rounded-xl text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 outline-none transition-all shadow-sm"
+            />
+          </div>
+          <select
+            value={filterDifficulty}
+            onChange={(e) => setFilterDifficulty(e.target.value)}
+            className="px-4 py-3 bg-white dark:bg-[#111] border border-slate-200 dark:border-white/10 rounded-xl text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500/50 outline-none transition-all cursor-pointer shadow-sm min-w-[140px]"
+          >
+            <option value="all">所有难度</option>
+            <option value="easy">简单</option>
+            <option value="medium">中等</option>
+            <option value="hard">困难</option>
+          </select>
+        </div>
 
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
