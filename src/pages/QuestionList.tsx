@@ -11,6 +11,9 @@ import { useAppStore } from '../store';
 export default function QuestionList() {
   const [search, setSearch] = useState('');
   const [filterDifficulty, setFilterDifficulty] = useState<string>('all');
+  const [filterMastery, setFilterMastery] = useState<string>('all');
+  const [filterTag, setFilterTag] = useState<string>('all');
+  
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [importDialogOpen, setImportDialogOpen] = useState(false);
@@ -35,8 +38,23 @@ export default function QuestionList() {
   const bulkDeleteQuestions = useAppStore(state => state.bulkDeleteQuestions);
   const deleteQuestion = useAppStore(state => state.deleteQuestion);
 
+  const allTags = useMemo(() => {
+    const tagsSet = new Set<string>();
+    allQuestions.forEach(q => q.tags.forEach(t => tagsSet.add(t)));
+    return Array.from(tagsSet).sort();
+  }, [allQuestions]);
+
   const questions = useMemo(() => {
     let results = allQuestions.filter(q => filterDifficulty === 'all' || q.difficulty === filterDifficulty);
+    
+    if (filterMastery !== 'all') {
+      results = results.filter(q => q.masteryLevel === parseInt(filterMastery, 10));
+    }
+    
+    if (filterTag !== 'all') {
+      results = results.filter(q => q.tags.includes(filterTag));
+    }
+    
     if (search.trim()) {
       results = results.filter(q => 
         q.title.toLowerCase().includes(search.toLowerCase()) || 
@@ -44,7 +62,7 @@ export default function QuestionList() {
       );
     }
     return results.sort((a, b) => b.createdAt - a.createdAt);
-  }, [allQuestions, filterDifficulty, search]);
+  }, [allQuestions, filterDifficulty, filterMastery, filterTag, search]);
 
   const handleDelete = async (id: string) => {
     if (window.confirm('Are you sure you want to delete this question?')) {
@@ -372,7 +390,7 @@ export default function QuestionList() {
           </div>
         )}
 
-        <div className="p-6 border-b border-slate-200/50 dark:border-white/5 flex flex-col sm:flex-row gap-4 bg-white/50 dark:bg-slate-900/50">
+        <div className="p-6 border-b border-slate-200/50 dark:border-white/5 flex flex-col gap-4 bg-white/50 dark:bg-slate-900/50">
           <div className="relative flex-1 group">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-emerald-500 transition-colors" />
             <input
@@ -383,16 +401,41 @@ export default function QuestionList() {
               className="w-full pl-12 pr-4 py-3 bg-white dark:bg-[#111] border border-slate-200 dark:border-white/10 rounded-xl text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 outline-none transition-all shadow-sm"
             />
           </div>
-          <select
-            value={filterDifficulty}
-            onChange={(e) => setFilterDifficulty(e.target.value)}
-            className="px-4 py-3 bg-white dark:bg-[#111] border border-slate-200 dark:border-white/10 rounded-xl text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500/50 outline-none transition-all cursor-pointer shadow-sm min-w-[140px]"
-          >
-            <option value="all">所有难度</option>
-            <option value="easy">简单</option>
-            <option value="medium">中等</option>
-            <option value="hard">困难</option>
-          </select>
+          
+          <div className="flex flex-wrap items-center gap-3">
+            <select
+              value={filterDifficulty}
+              onChange={(e) => setFilterDifficulty(e.target.value)}
+              className="px-4 py-2 bg-white dark:bg-[#111] border border-slate-200 dark:border-white/10 rounded-xl text-sm font-medium text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-emerald-500/50 outline-none transition-all cursor-pointer shadow-sm min-w-[120px]"
+            >
+              <option value="all">所有难度</option>
+              <option value="easy">简单</option>
+              <option value="medium">中等</option>
+              <option value="hard">困难</option>
+            </select>
+
+            <select
+              value={filterMastery}
+              onChange={(e) => setFilterMastery(e.target.value)}
+              className="px-4 py-2 bg-white dark:bg-[#111] border border-slate-200 dark:border-white/10 rounded-xl text-sm font-medium text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-emerald-500/50 outline-none transition-all cursor-pointer shadow-sm min-w-[120px]"
+            >
+              <option value="all">所有掌握程度</option>
+              <option value="0">新题目</option>
+              <option value="1">学习中</option>
+              <option value="2">已掌握</option>
+            </select>
+
+            <select
+              value={filterTag}
+              onChange={(e) => setFilterTag(e.target.value)}
+              className="px-4 py-2 bg-white dark:bg-[#111] border border-slate-200 dark:border-white/10 rounded-xl text-sm font-medium text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-emerald-500/50 outline-none transition-all cursor-pointer shadow-sm min-w-[120px] max-w-[200px]"
+            >
+              <option value="all">所有标签</option>
+              {allTags.map(tag => (
+                <option key={tag} value={tag}>{tag}</option>
+              ))}
+            </select>
+          </div>
         </div>
 
         <div className="overflow-x-auto">
@@ -409,8 +452,8 @@ export default function QuestionList() {
                 <th className="px-6 py-4 font-medium text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400">题目名称</th>
                 <th className="px-6 py-4 font-medium text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400">难度</th>
                 <th className="px-6 py-4 font-medium text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400">标签</th>
-                <th className="px-6 py-4 font-medium text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400">掌握程度</th>
-                <th className="px-6 py-4 font-medium text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400 text-right">操作</th>
+                <th className="px-6 py-4 font-medium text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400 whitespace-nowrap">掌握程度</th>
+                <th className="px-6 py-4 font-medium text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400 text-right whitespace-nowrap">操作</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100/50 dark:divide-white/5">
@@ -424,22 +467,22 @@ export default function QuestionList() {
                     key={q.id} 
                     className="hover:bg-white dark:hover:bg-white/[0.02] transition-colors group"
                   >
-                    <td className="px-6 py-5 w-10">
+                    <td className="px-6 py-5 w-10 whitespace-nowrap">
                       <input
                         type="checkbox"
                         checked={selectedIds.has(q.id)}
                         onChange={(e) => toggleOne(q.id, e.target.checked)}
                       />
                     </td>
-                    <td className="px-6 py-5">
-                      <p className="font-medium text-slate-900 dark:text-white line-clamp-1">{q.title}</p>
+                    <td className="px-6 py-5 min-w-[300px]">
+                      <p className="font-medium text-slate-900 dark:text-white line-clamp-2">{q.title}</p>
                     </td>
-                    <td className="px-6 py-5">
+                    <td className="px-6 py-5 whitespace-nowrap">
                       <span className={clsx("px-3 py-1 rounded-full text-xs font-medium border", getDifficultyColor(q.difficulty))}>
                         {getDifficultyLabel(q.difficulty)}
                       </span>
                     </td>
-                    <td className="px-6 py-5">
+                    <td className="px-6 py-5 min-w-[150px]">
                       <div className="flex flex-wrap gap-2">
                         {q.tags.map(tag => (
                           <span key={tag} className="px-2.5 py-1 bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-slate-300 rounded-md text-xs font-medium">
@@ -448,7 +491,7 @@ export default function QuestionList() {
                         ))}
                       </div>
                     </td>
-                    <td className="px-6 py-5">
+                    <td className="px-6 py-5 whitespace-nowrap">
                       <div className="flex items-center gap-2">
                         <div className={clsx("w-2 h-2 rounded-full shadow-sm", q.masteryLevel >= 0 ? (q.masteryLevel === 0 ? "bg-rose-500 shadow-rose-500/50" : (q.masteryLevel === 1 ? "bg-amber-500 shadow-amber-500/50" : "bg-emerald-500 shadow-emerald-500/50")) : "bg-slate-300 dark:bg-slate-600")} />
                         <span className="text-sm font-medium text-slate-600 dark:text-slate-400">
@@ -456,7 +499,7 @@ export default function QuestionList() {
                         </span>
                       </div>
                     </td>
-                    <td className="px-6 py-5 text-right">
+                    <td className="px-6 py-5 text-right whitespace-nowrap">
                       <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                         <Link
                           to={`/questions/edit/${q.id}`}
