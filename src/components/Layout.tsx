@@ -3,6 +3,7 @@ import { useAppStore } from '../store';
 import { LayoutDashboard, Library, PlayCircle, Settings, Sun, Moon, PanelLeftClose, PanelLeft, Cloud, CloudOff, RefreshCw } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import clsx from 'clsx';
+import nmLogoUrl from '../assets/nm.svg';
 
 export default function Layout() {
   const { sidebarOpen, toggleSidebar, theme, toggleTheme, isSyncing, githubToken, gistId, syncError } = useAppStore();
@@ -101,7 +102,7 @@ export default function Layout() {
             {/* Logo Area */}
             <div className="flex flex-col items-center justify-center pt-8 pb-6 relative">
               <div className="flex flex-col items-center gap-2">
-                <img src="/src/assets/nm.svg" alt="fkcoding logo" className="w-16 h-16 object-contain" />
+                <img src={nmLogoUrl} alt="fkcoding logo" className="w-16 h-16 object-contain" />
                 <AnimatePresence>
                   <motion.span
                     initial={{ opacity: 0, scale: 0.9 }}
@@ -133,7 +134,7 @@ export default function Layout() {
             className="flex-shrink-0 h-screen sticky top-0 bg-white dark:bg-miro-black border-r border-miro-border/40 shadow-ring z-40 overflow-hidden flex flex-col"
           >
             <div className="flex flex-col items-center justify-center pt-8 pb-6 relative">
-              <img src="/src/assets/nm.svg" alt="fkcoding logo" className="w-10 h-10 object-contain mb-4" />
+              <img src={nmLogoUrl} alt="fkcoding logo" className="w-10 h-10 object-contain mb-4" />
               <button 
                 onClick={toggleSidebar}
                 className="p-2 text-miro-slate hover:bg-slate-100 dark:hover:bg-white/10 rounded-lg transition-colors"
