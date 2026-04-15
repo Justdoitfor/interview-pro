@@ -46,6 +46,7 @@ export default function PracticeSession() {
   const [aiChatInput, setAiChatInput] = useState('');
   const [aiChatMessages, setAiChatMessages] = useState<Array<{ role: 'user' | 'assistant'; content: string }>>([]);
   const [isAskingAI, setIsAskingAI] = useState(false);
+  const [aiChatOpen, setAiChatOpen] = useState(false);
   const isInitialized = useRef(false);
 
   const allQuestions = useAppStore(state => state.questions);
@@ -99,6 +100,7 @@ export default function PracticeSession() {
     setAiChatMessages([]);
     setIsAskingAI(false);
     setIsGeneratingAI(false);
+    setAiChatOpen(false);
   }, [currentQuestion?.id]);
 
   const handleGenerateAIAnswer = async () => {
@@ -476,20 +478,54 @@ export default function PracticeSession() {
                         )
                       )}
                     </div>
+                  </div>
+                )}
+              </div>
 
-                    <div className="not-prose mt-10 rounded-[20px] border border-miro-border/40 dark:border-white/10 bg-white/70 dark:bg-black/20 backdrop-blur-xl shadow-sm p-6">
-                      <div className="flex items-center gap-2 mb-4">
-                        <MessageCircle className="w-5 h-5 text-miro-blue" />
-                        <div className="font-display font-bold text-[16px] text-miro-black dark:text-white">向 AI 提问</div>
+              {isFlipped && (
+                <>
+                  <button
+                    onClick={() => setAiChatOpen(true)}
+                    className={clsx(
+                      "not-prose absolute right-6 z-30 inline-flex items-center justify-center w-14 h-14 rounded-[16px] bg-miro-blue text-white shadow-soft transition-colors hover:bg-miro-bluePressed",
+                      aiChatOpen ? "opacity-0 pointer-events-none" : "opacity-100"
+                    )}
+                    style={{ bottom: '7.5rem' }}
+                    title="向 AI 提问"
+                  >
+                    <MessageCircle className="w-6 h-6" />
+                  </button>
+
+                  {aiChatOpen && (
+                    <div
+                      className="not-prose absolute right-6 z-40 w-[420px] max-w-[calc(100%-3rem)] rounded-[20px] border border-miro-border/40 dark:border-white/10 bg-white/85 dark:bg-black/40 backdrop-blur-xl shadow-soft overflow-hidden flex flex-col"
+                      style={{ bottom: '7.5rem', height: '520px', maxHeight: 'calc(100% - 9rem)' }}
+                    >
+                      <div className="flex items-center justify-between px-5 py-4 border-b border-miro-border/40 dark:border-white/10">
+                        <div className="flex items-center gap-2">
+                          <MessageCircle className="w-5 h-5 text-miro-blue" />
+                          <div className="font-display font-bold text-[15px] text-miro-black dark:text-white">向 AI 提问</div>
+                        </div>
+                        <button
+                          onClick={() => setAiChatOpen(false)}
+                          className="w-9 h-9 inline-flex items-center justify-center rounded-[12px] hover:bg-slate-100 dark:hover:bg-white/5 text-miro-slate dark:text-slate-300 transition-colors"
+                          title="收起"
+                        >
+                          <X className="w-5 h-5" />
+                        </button>
                       </div>
 
-                      {aiChatMessages.length > 0 && (
-                        <div className="max-h-[280px] overflow-auto pr-2 custom-scrollbar space-y-3">
-                          {aiChatMessages.map((m, idx) => (
+                      <div className="flex-1 min-h-0 overflow-auto p-4 custom-scrollbar space-y-3">
+                        {aiChatMessages.length === 0 ? (
+                          <div className="text-[13px] text-miro-slate dark:text-slate-400 leading-relaxed">
+                            你可以追问答案中的概念、字段含义、边界情况、对比方案等。
+                          </div>
+                        ) : (
+                          aiChatMessages.map((m, idx) => (
                             <div
                               key={`${idx}-${m.role}`}
                               className={clsx(
-                                "rounded-[14px] px-4 py-3 border text-[14px] leading-relaxed",
+                                "rounded-[14px] px-4 py-3 border text-[13px] leading-relaxed",
                                 m.role === 'user'
                                   ? "bg-miro-blue/10 border-miro-blue/20 text-miro-black dark:text-slate-200 ml-10"
                                   : "bg-slate-100/70 dark:bg-white/5 border-miro-border/40 dark:border-white/10 text-miro-black dark:text-slate-200 mr-10"
@@ -503,31 +539,39 @@ export default function PracticeSession() {
                                 <div className="whitespace-pre-wrap">{m.content}</div>
                               )}
                             </div>
-                          ))}
-                        </div>
-                      )}
+                          ))
+                        )}
+                      </div>
 
-                      <div className="mt-4 flex gap-3 items-end">
-                        <textarea
-                          value={aiChatInput}
-                          onChange={(e) => setAiChatInput(e.target.value)}
-                          rows={2}
-                          placeholder={qwenApiKey ? '例如：请解释一下答案里的某个概念/字段含义...' : '请先在设置中配置 Qwen API Key'}
-                          className="flex-1 px-4 py-3 rounded-[14px] border border-miro-border/40 dark:border-white/10 bg-white dark:bg-[#111] text-miro-black dark:text-white outline-none focus:ring-2 focus:ring-miro-blue/30 resize-none text-[14px]"
-                        />
-                        <button
-                          onClick={handleAskAI}
-                          disabled={!qwenApiKey || isAskingAI || !aiChatInput.trim()}
-                          className="shrink-0 inline-flex items-center justify-center w-12 h-12 rounded-[14px] bg-miro-blue text-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-miro-bluePressed transition-colors shadow-sm"
-                          title="发送"
-                        >
-                          {isAskingAI ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}
-                        </button>
+                      <div className="p-4 border-t border-miro-border/40 dark:border-white/10">
+                        <div className="flex gap-3 items-end">
+                          <textarea
+                            value={aiChatInput}
+                            onChange={(e) => setAiChatInput(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter' && !e.shiftKey) {
+                                e.preventDefault();
+                                handleAskAI();
+                              }
+                            }}
+                            rows={2}
+                            placeholder={qwenApiKey ? '输入问题，Enter 发送，Shift+Enter 换行' : '请先在设置中配置 Qwen API Key'}
+                            className="flex-1 px-4 py-3 rounded-[14px] border border-miro-border/40 dark:border-white/10 bg-white dark:bg-[#111] text-miro-black dark:text-white outline-none focus:ring-2 focus:ring-miro-blue/30 resize-none text-[13px]"
+                          />
+                          <button
+                            onClick={handleAskAI}
+                            disabled={!qwenApiKey || isAskingAI || !aiChatInput.trim()}
+                            className="shrink-0 inline-flex items-center justify-center w-12 h-12 rounded-[14px] bg-miro-blue text-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-miro-bluePressed transition-colors shadow-sm"
+                            title="发送"
+                          >
+                            {isAskingAI ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}
+                          </button>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                )}
-              </div>
+                  )}
+                </>
+              )}
 
               {!isFlipped ? (
                 <div className="p-6 bg-slate-50/50 dark:bg-black/20 border-t border-miro-border/40 dark:border-white/10 relative z-10 flex justify-center">
