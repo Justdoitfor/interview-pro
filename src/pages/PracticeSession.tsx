@@ -90,7 +90,7 @@ export default function PracticeSession() {
 
   const handleGenerateAIAnswer = async () => {
     if (!currentQuestion) return;
-    if (currentQuestion.aiAnswer) return; // Already generated
+    if (currentQuestion.aiAnswer) return;
 
     if (!qwenApiKey) {
       alert('请先在设置中配置 Qwen API Key');
@@ -112,12 +112,14 @@ export default function PracticeSession() {
         ]
       });
 
+      const now = Date.now();
       await updateQuestion(currentQuestion.id, {
         aiAnswer,
-        updatedAt: Date.now()
+        aiAnswerUpdatedAt: now,
+        updatedAt: now
       });
       
-      setQuestions(prev => prev.map(q => q.id === currentQuestion.id ? { ...q, aiAnswer } : q));
+      setQuestions(prev => prev.map(q => q.id === currentQuestion.id ? { ...q, aiAnswer, aiAnswerUpdatedAt: now } : q));
     } catch (err: any) {
       alert(`生成 AI 答案失败: ${err.message}`);
       setActiveAnswerTab('fixed');

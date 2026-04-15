@@ -26,6 +26,7 @@ export default function QuestionList() {
       tags: string[];
       content: string;
       answer: string;
+      aiAnswer: string;
       errors: string[];
       duplicate: boolean;
       signature: string;
@@ -88,9 +89,11 @@ export default function QuestionList() {
     }
   };
 
-  const signatureOf = (title: string, answer: string) => {
+  const signatureOf = (title: string, answer: string, aiAnswer?: string) => {
     const t = title.trim().replace(/\s+/g, ' ');
-    const a = answer.trim().replace(/\s+/g, ' ');
+    const a0 = answer.trim();
+    const a1 = String(aiAnswer ?? '').trim();
+    const a = (a0 || a1).replace(/\s+/g, ' ');
     return `${t}||${a}`;
   };
 
@@ -119,7 +122,7 @@ export default function QuestionList() {
 
   const downloadTemplate = () => {
     const headers = [
-      { 题目名称: '', 难度: '', 标签: '', 题目描述: '', 答案与解析: '' }
+      { 题目名称: '', 难度: '', 标签: '', 题目描述: '', 答案与解析: '', AI答案: '' }
     ];
     const worksheet = XLSX.utils.json_to_sheet(headers);
     const workbook = XLSX.utils.book_new();
@@ -133,7 +136,8 @@ export default function QuestionList() {
       难度: q.difficulty === 'easy' ? '简单' : q.difficulty === 'hard' ? '困难' : '中等',
       标签: q.tags.join(','),
       题目描述: q.content,
-      答案与解析: q.answer
+      答案与解析: q.answer,
+      AI答案: q.aiAnswer || ''
     }));
     const worksheet = XLSX.utils.json_to_sheet(rows);
     const workbook = XLSX.utils.book_new();
@@ -147,7 +151,8 @@ export default function QuestionList() {
       难度: q.difficulty === 'easy' ? '简单' : q.difficulty === 'hard' ? '困难' : '中等',
       标签: q.tags.join(','),
       题目描述: q.content,
-      答案与解析: q.answer
+      答案与解析: q.answer,
+      AI答案: q.aiAnswer || ''
     }));
     const worksheet = XLSX.utils.json_to_sheet(rows);
     const csv = XLSX.utils.sheet_to_csv(worksheet);
@@ -165,23 +170,24 @@ export default function QuestionList() {
       const worksheet = workbook.Sheets[firstSheetName];
       const json = XLSX.utils.sheet_to_json(worksheet) as any[];
 
-      const existingSigs = new Set(allQuestions.map((q) => signatureOf(q.title, q.answer)));
+      const existingSigs = new Set(allQuestions.map((q) => signatureOf(q.title, q.answer, q.aiAnswer)));
 
       const localSeen = new Set<string>();
       const parsed = json.map((row, i) => {
         const title = String(row['题目名称'] || row['title'] || '').trim();
         const answer = String(row['答案与解析'] || row['answer'] || '').trim();
+        const aiAnswer = String(row['AI答案'] || row['aiAnswer'] || '').trim();
         const difficulty = normalizeDifficulty(row['难度'] || row['difficulty']);
         const tags = parseTags(row['标签'] || row['tags']);
         const content = String(row['题目描述'] || row['content'] || '');
-        const signature = signatureOf(title, answer);
+        const signature = signatureOf(title, answer, aiAnswer);
 
         const errors: string[] = [];
         if (!title) errors.push('缺少题目名称');
-        if (!answer) errors.push('缺少答案与解析');
+        if (!answer && !aiAnswer) errors.push('缺少答案与解析（固定答案或 AI 答案至少提供一个）');
         if (!['easy', 'medium', 'hard'].includes(difficulty)) errors.push('难度不合法');
 
-        const duplicate = (title && answer && (existingSigs.has(signature) || localSeen.has(signature))) || false;
+        const duplicate = (title && (answer || aiAnswer) && (existingSigs.has(signature) || localSeen.has(signature))) || false;
         localSeen.add(signature);
 
         return {
@@ -191,6 +197,7 @@ export default function QuestionList() {
           tags,
           content,
           answer,
+          aiAnswer,
           errors,
           duplicate,
           signature
@@ -230,6 +237,8 @@ export default function QuestionList() {
       tags: r.tags,
       content: r.content,
       answer: r.answer,
+      aiAnswer: r.aiAnswer,
+      aiAnswerUpdatedAt: r.aiAnswer ? now : 0,
       masteryLevel: 0,
       lastReviewedAt: 0,
       reviewCount: 0,
