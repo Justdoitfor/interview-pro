@@ -1,4 +1,4 @@
-# 面试通 (Interview Pro) - 轻量级云端沉浸式刷题系统
+# fkcoding (Interview Pro) - 轻量级云端沉浸式刷题系统
 
 基于 React 18、Vite、TypeScript、Tailwind CSS 和 Zustand 构建的轻量级面试题管理与刷题平台。它利用 **纯内存运行 + GitHub Gist 私有云同步** 作为数据存储方案，摆脱了对浏览器缓存（IndexedDB）的依赖，既保证了极快的响应速度，又解决了清缓存/换设备导致数据丢失的痛点。您可以将它一键部署到 GitHub Pages 等任意静态托管平台。
 
@@ -49,7 +49,7 @@ pnpm run dev
 
 1. **获取 Token**：登录您的 GitHub 账号，进入 `Settings` -> `Developer settings` -> `Personal access tokens (Tokens (classic))`，点击 `Generate new token`，**勾选 `gist` 权限**，生成一段以 `ghp_` 开头的 Token 字符串。
 2. **初始化题库**：
-   - 访问您部署好的网页版面试通。
+   - 访问您部署好的网页版 fkcoding。
    - 点击左侧边栏的 **数据设置**。
    - 在“云端同步 (GitHub Gist)”区域，填入您刚才生成的 Token。
    - `Gist ID` 留空，直接点击 **“首次创建云端备份”**。
