@@ -357,7 +357,7 @@ export default function PracticeSession() {
         {/* Progress Bar Container */}
         <div className="w-full h-2 bg-slate-200 dark:bg-white/10 rounded-full overflow-hidden shrink-0">
           <div 
-            className="h-full bg-miro-blue transition-all duration-500 ease-out"
+            className="h-full bg-miro-blue transition-all duration-500 ease-out rounded-full"
             style={{ width: `${((currentIndex + 1) / questions.length) * 100}%` }}
           />
         </div>
@@ -417,10 +417,10 @@ export default function PracticeSession() {
                 </div>
               </div>
             ) : (
-              <div className="w-full h-full grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_320px] gap-4 md:gap-6">
-                <div className="relative w-full h-full">
-                  <div className="w-full h-full rounded-[24px] flex flex-col overflow-hidden relative transition-colors duration-500 bg-pastel-pink-soft dark:bg-pastel-pink-soft/10 border border-pastel-pink-soft/50 shadow-soft">
-                    <div className="p-8 md:p-12 flex-1 overflow-y-auto custom-scrollbar relative z-10">
+              <div className="w-full h-full min-h-0 grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_320px] gap-4 md:gap-6">
+                <div className="relative w-full h-full min-h-0">
+                  <div className="w-full h-full min-h-0 rounded-[24px] flex flex-col overflow-hidden relative transition-colors duration-500 bg-pastel-pink-soft dark:bg-pastel-pink-soft/10 border border-pastel-pink-soft/50 shadow-soft">
+                    <div className="p-8 md:p-12 flex-1 min-h-0 overflow-y-auto custom-scrollbar relative z-10">
                       <div className="prose prose-slate prose-lg dark:prose-invert max-w-none w-full relative">
                         <div className="absolute top-0 right-0 flex items-center bg-slate-100 dark:bg-white/5 rounded-[12px] p-1 border border-miro-border/40 dark:border-white/10 shadow-sm z-20">
                           <button
@@ -579,10 +579,11 @@ export default function PracticeSession() {
                   )}
                 </div>
 
-                <div className="w-full h-full flex flex-col">
-                  <div className="rounded-[24px] glass-panel border border-miro-border/40 dark:border-white/10 p-6 md:p-7 shadow-soft h-full">
-                    <div className="text-[14px] font-bold text-miro-slate dark:text-slate-400 mb-5 tracking-widest uppercase text-center">评估掌握程度</div>
-                    <div className="flex flex-col gap-4">
+                <div className="w-full h-full min-h-0 flex flex-col">
+                  <div className="rounded-[24px] glass-panel border border-miro-border/40 dark:border-white/10 p-6 md:p-7 shadow-soft h-full min-h-0 flex flex-col">
+                    <div className="flex-1 min-h-0 flex flex-col justify-center">
+                      <div className="text-[14px] font-bold text-miro-slate dark:text-slate-400 mb-5 tracking-widest uppercase text-center">评估掌握程度</div>
+                      <div className="flex flex-col gap-4">
                       <button
                         onClick={() => handleMastery(0)}
                         className="flex flex-col items-center justify-center p-4 bg-white dark:bg-[#111] border border-miro-border/40 dark:border-white/10 rounded-[12px] hover:border-pastel-coral-dark dark:hover:border-pastel-coral-light hover:bg-pastel-red-light/30 transition-all group shadow-sm hover:shadow-soft"
@@ -611,6 +612,7 @@ export default function PracticeSession() {
                         <MessageCircle className="w-8 h-8 text-miro-blue mb-3 group-hover:scale-110 transition-transform" />
                         <span className="font-bold text-miro-black dark:text-slate-300 group-hover:text-miro-blue">问 AI</span>
                       </button>
+                      </div>
                     </div>
                   </div>
                 </div>
