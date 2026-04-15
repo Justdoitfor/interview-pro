@@ -32,6 +32,7 @@ export default function PracticeSession() {
 
   const [questions, setQuestions] = useState<Question[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [historyStack, setHistoryStack] = useState<number[]>([]);
   const [isFlipped, setIsFlipped] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isFinished, setIsFinished] = useState(false);
@@ -111,6 +112,7 @@ export default function PracticeSession() {
     });
 
     if (currentIndex < questions.length - 1) {
+      setHistoryStack(prev => [...prev, currentIndex]);
       const nextQ = questions[currentIndex + 1];
       setIsFlipped(nextQ.reviewCount === 0);
       setCurrentIndex(prev => prev + 1);
@@ -183,11 +185,13 @@ export default function PracticeSession() {
             <button onClick={() => navigate('/practice')} className="p-2 text-slate-500 hover:bg-slate-200/50 dark:hover:bg-white/5 rounded-full transition-colors" title="退出练习">
               <X className="w-6 h-6" />
             </button>
-            {currentIndex > 0 && (
+            {historyStack.length > 0 && (
               <button 
                 onClick={() => {
-                  const prevQ = questions[currentIndex - 1];
-                  setCurrentIndex(prev => prev - 1);
+                  const prevIndex = historyStack[historyStack.length - 1];
+                  setHistoryStack(prev => prev.slice(0, -1));
+                  const prevQ = questions[prevIndex];
+                  setCurrentIndex(prevIndex);
                   setIsFlipped(prevQ.reviewCount === 0);
                 }} 
                 className="flex items-center px-3 py-1.5 text-sm font-bold text-slate-600 dark:text-slate-300 bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 rounded-full transition-colors"
