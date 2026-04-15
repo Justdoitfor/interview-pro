@@ -8,8 +8,9 @@ export default function Settings() {
   const [isExporting, setIsExporting] = useState(false);
 
   // Github Gist Sync states
-  const { githubToken, gistId, setGithubToken, setGistId, qwenApiKey, qwenBaseUrl, qwenModel, setQwenApiKey, setQwenBaseUrl, setQwenModel } = useAppStore();
+  const { githubToken, githubTokenEnc, gistId, setGithubToken, setGistId, qwenApiKey, qwenApiKeyEnc, qwenBaseUrl, qwenModel, setQwenApiKey, setQwenBaseUrl, setQwenModel, lockSecrets, unlockSecrets, saveSecretsEncrypted } = useAppStore();
   const [isSyncing, setIsSyncing] = useState(false);
+  const [passphrase, setPassphrase] = useState('');
 
   const questions = useAppStore(state => state.questions);
   const setQuestions = useAppStore(state => state.setQuestions);
@@ -111,6 +112,27 @@ export default function Settings() {
     }
   };
 
+  const handleUnlock = async () => {
+    if (!passphrase) return alert('请输入解锁口令');
+    try {
+      await unlockSecrets(passphrase);
+      alert('解锁成功（本次会话有效）');
+    } catch (e: any) {
+      alert(e?.message || '解锁失败，请检查口令是否正确');
+    }
+  };
+
+  const handleSaveEncrypted = async () => {
+    if (!passphrase) return alert('请输入解锁口令');
+    if (!githubToken && !qwenApiKey) return alert('请先输入 GitHub Token / Qwen API Key');
+    try {
+      await saveSecretsEncrypted(passphrase);
+      alert('已加密保存到本地（下次打开需解锁后使用）');
+    } catch (e: any) {
+      alert(e?.message || '加密保存失败');
+    }
+  };
+
   return (
     <motion.div 
       initial={{ opacity: 0, y: 20 }}
@@ -135,6 +157,46 @@ export default function Settings() {
           </div>
 
           <div className="space-y-6">
+            <div className="space-y-2">
+              <label className="text-sm font-bold text-slate-700 dark:text-slate-300 flex items-center">
+                <Key className="w-4 h-4 mr-2 text-slate-400" />
+                解锁口令（用于本地加密存储）
+              </label>
+              <input
+                type="password"
+                value={passphrase}
+                onChange={(e) => setPassphrase(e.target.value)}
+                placeholder="请输入自定义口令（不会上传）"
+                className="w-full px-4 py-3 bg-white dark:bg-[#111] border border-slate-200 dark:border-white/10 rounded-xl focus:ring-2 focus:ring-purple-500/50 outline-none transition-all text-slate-900 dark:text-white"
+              />
+              <div className="flex flex-wrap gap-3">
+                <button
+                  onClick={handleUnlock}
+                  disabled={!githubTokenEnc && !qwenApiKeyEnc}
+                  className="flex items-center px-5 py-2.5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-xl font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-800 dark:hover:bg-slate-100 shadow-lg shadow-slate-900/10 dark:shadow-white/10"
+                >
+                  解锁
+                </button>
+                <button
+                  onClick={handleSaveEncrypted}
+                  className="flex items-center px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold transition-all shadow-lg shadow-emerald-500/20"
+                >
+                  加密保存
+                </button>
+                <button
+                  onClick={() => lockSecrets()}
+                  className="flex items-center px-5 py-2.5 bg-white dark:bg-[#111] border border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-300 rounded-xl font-bold transition-all hover:bg-slate-50 dark:hover:bg-white/5 shadow-sm"
+                >
+                  锁定
+                </button>
+              </div>
+              {(githubTokenEnc || qwenApiKeyEnc) && (
+                <div className="text-sm text-slate-500 dark:text-slate-400">
+                  已检测到本地密文配置：{githubTokenEnc ? 'GitHub Token' : ''}{githubTokenEnc && qwenApiKeyEnc ? '、' : ''}{qwenApiKeyEnc ? 'Qwen API Key' : ''}。解锁后才可用于同步/AI 功能。
+                </div>
+              )}
+            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
                 <label className="text-sm font-bold text-slate-700 dark:text-slate-300 flex items-center">

@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { Question } from '../types';
 import { pushToGist, pullFromGist } from '../services/githubSync';
+import { decryptSecret, encryptSecret } from '../lib/secretCrypto';
 
 interface AppState {
   // UI States
@@ -13,15 +14,22 @@ interface AppState {
 
   // Cloud Config
   githubToken: string;
+  githubTokenEnc: string;
   gistId: string;
   setGithubToken: (token: string) => void;
+  setGithubTokenEnc: (tokenEnc: string) => void;
   setGistId: (id: string) => void;
   qwenApiKey: string;
+  qwenApiKeyEnc: string;
   qwenBaseUrl: string;
   qwenModel: string;
   setQwenApiKey: (key: string) => void;
+  setQwenApiKeyEnc: (keyEnc: string) => void;
   setQwenBaseUrl: (url: string) => void;
   setQwenModel: (model: string) => void;
+  lockSecrets: () => void;
+  unlockSecrets: (passphrase: string) => Promise<void>;
+  saveSecretsEncrypted: (passphrase: string) => Promise<void>;
 
   // Data States
   questions: Question[];
@@ -55,15 +63,34 @@ export const useAppStore = create<AppState>()(
       theme: 'dark',
       toggleTheme: () => set((state) => ({ theme: state.theme === 'dark' ? 'light' : 'dark' })),
       githubToken: '',
+      githubTokenEnc: '',
       gistId: '',
       setGithubToken: (token) => set({ githubToken: token }),
+      setGithubTokenEnc: (tokenEnc) => set({ githubTokenEnc: tokenEnc }),
       setGistId: (id) => set({ gistId: id }),
       qwenApiKey: '',
+      qwenApiKeyEnc: '',
       qwenBaseUrl: 'https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions',
       qwenModel: 'qwen-plus',
       setQwenApiKey: (key) => set({ qwenApiKey: key }),
+      setQwenApiKeyEnc: (keyEnc) => set({ qwenApiKeyEnc: keyEnc }),
       setQwenBaseUrl: (url) => set({ qwenBaseUrl: url }),
       setQwenModel: (model) => set({ qwenModel: model }),
+      lockSecrets: () => set({ githubToken: '', qwenApiKey: '' }),
+      unlockSecrets: async (passphrase) => {
+        const { githubTokenEnc, qwenApiKeyEnc } = get();
+        const next: Partial<AppState> = {};
+        if (githubTokenEnc) next.githubToken = await decryptSecret(githubTokenEnc, passphrase);
+        if (qwenApiKeyEnc) next.qwenApiKey = await decryptSecret(qwenApiKeyEnc, passphrase);
+        set(next as any);
+      },
+      saveSecretsEncrypted: async (passphrase) => {
+        const { githubToken, qwenApiKey } = get();
+        const next: Partial<AppState> = {};
+        if (githubToken) next.githubTokenEnc = await encryptSecret(githubToken, passphrase);
+        if (qwenApiKey) next.qwenApiKeyEnc = await encryptSecret(qwenApiKey, passphrase);
+        set(next as any);
+      },
 
       questions: [],
       isInitializing: false,
@@ -72,7 +99,11 @@ export const useAppStore = create<AppState>()(
       syncError: null,
 
       fetchFromCloud: async () => {
-        const { githubToken, gistId } = get();
+        const { githubToken, githubTokenEnc, gistId } = get();
+        if (!githubToken && githubTokenEnc) {
+          set({ syncError: '请先在数据设置中解锁 GitHub Token' });
+          return;
+        }
         if (!githubToken || !gistId) return;
 
         set({ isInitializing: true, syncError: null });
@@ -90,7 +121,11 @@ export const useAppStore = create<AppState>()(
       },
 
       syncToCloud: async () => {
-        const { githubToken, gistId, questions } = get();
+        const { githubToken, githubTokenEnc, gistId, questions } = get();
+        if (!githubToken && githubTokenEnc) {
+          set({ syncError: '请先在数据设置中解锁 GitHub Token' });
+          return;
+        }
         if (!githubToken) return;
 
         set({ isSyncing: true, syncError: null });
@@ -176,9 +211,9 @@ export const useAppStore = create<AppState>()(
       partialize: (state) => ({ 
         sidebarOpen: state.sidebarOpen, 
         theme: state.theme,
-        githubToken: state.githubToken,
+        githubTokenEnc: state.githubTokenEnc,
         gistId: state.gistId,
-        qwenApiKey: state.qwenApiKey,
+        qwenApiKeyEnc: state.qwenApiKeyEnc,
         qwenBaseUrl: state.qwenBaseUrl,
         qwenModel: state.qwenModel
       }),
