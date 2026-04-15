@@ -14,6 +14,78 @@ export default function Layout() {
     { to: '/settings', icon: Settings, label: '数据设置' },
   ];
 
+  const renderNavContent = () => (
+    <>
+      <nav className="flex-1 px-4 py-2 space-y-2 overflow-y-auto">
+        {navItems.map((item) => (
+          <NavLink
+            key={item.to}
+            to={item.to}
+            className={({ isActive }) => clsx(
+              "flex items-center px-4 py-3 rounded-[12px] font-bold text-sm transition-all group",
+              isActive 
+                ? "bg-miro-blue text-white shadow-soft" 
+                : "text-miro-slate hover:bg-slate-100 dark:hover:bg-white/5 dark:text-slate-300"
+            )}
+          >
+            <item.icon className={clsx(
+              "w-5 h-5 shrink-0 transition-transform group-hover:scale-110",
+              sidebarOpen ? "mr-4" : "mx-auto"
+            )} />
+            <AnimatePresence>
+              {sidebarOpen && (
+                <motion.span
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -10 }}
+                  className="whitespace-nowrap"
+                >
+                  {item.label}
+                </motion.span>
+              )}
+            </AnimatePresence>
+          </NavLink>
+        ))}
+      </nav>
+
+      <div className="p-4 border-t border-miro-border/40 dark:border-white/10 space-y-4">
+        <button
+          onClick={toggleTheme}
+          className={clsx(
+            "flex items-center w-full px-4 py-3 rounded-[12px] font-bold text-sm text-miro-slate hover:bg-slate-100 dark:hover:bg-white/5 dark:text-slate-300 transition-all group",
+            !sidebarOpen && "justify-center"
+          )}
+        >
+          {theme === 'dark' ? (
+            <Sun className={clsx("w-5 h-5 shrink-0 group-hover:scale-110 transition-transform", sidebarOpen && "mr-4")} />
+          ) : (
+            <Moon className={clsx("w-5 h-5 shrink-0 group-hover:scale-110 transition-transform", sidebarOpen && "mr-4")} />
+          )}
+          {sidebarOpen && <span>{theme === 'dark' ? '浅色模式' : '深色模式'}</span>}
+        </button>
+        
+        <div className={clsx(
+          "flex items-center px-4 py-3 rounded-[12px] text-sm font-bold bg-slate-50 dark:bg-white/5",
+          !sidebarOpen && "justify-center",
+          isSyncing ? "text-miro-blue" : syncError ? "text-pastel-coral-dark dark:text-pastel-coral-light" : "text-miro-success"
+        )}>
+          {isSyncing ? (
+            <RefreshCw className={clsx("w-5 h-5 shrink-0 animate-spin", sidebarOpen && "mr-4")} />
+          ) : syncError ? (
+            <CloudOff className={clsx("w-5 h-5 shrink-0", sidebarOpen && "mr-4")} />
+          ) : (
+            <Cloud className={clsx("w-5 h-5 shrink-0", sidebarOpen && "mr-4")} />
+          )}
+          {sidebarOpen && (
+            <span className="truncate">
+              {isSyncing ? '同步中...' : syncError ? '同步失败' : '已同步'}
+            </span>
+          )}
+        </div>
+      </div>
+    </>
+  );
+
   return (
     <div className="min-h-screen bg-white dark:bg-miro-black flex text-miro-black dark:text-white font-sans">
       <AnimatePresence mode="wait">
@@ -48,7 +120,8 @@ export default function Layout() {
                 <PanelLeftClose className="w-4 h-4" />
               </button>
             </div>
-
+            
+            {renderNavContent()}
           </motion.aside>
         ) : (
           <motion.aside
@@ -68,74 +141,8 @@ export default function Layout() {
                 <PanelLeft className="w-5 h-5" />
               </button>
             </div>
-          <nav className="flex-1 px-4 py-2 space-y-2 overflow-y-auto">
-            {navItems.map((item) => (
-              <NavLink
-                key={item.to}
-                to={item.to}
-                className={({ isActive }) => clsx(
-                  "flex items-center px-4 py-3 rounded-[12px] font-bold text-sm transition-all group",
-                  isActive 
-                    ? "bg-miro-blue text-white shadow-soft" 
-                    : "text-miro-slate hover:bg-slate-100 dark:hover:bg-white/5 dark:text-slate-300"
-                )}
-              >
-                <item.icon className={clsx(
-                  "w-5 h-5 shrink-0 transition-transform group-hover:scale-110",
-                  sidebarOpen ? "mr-4" : "mx-auto"
-                )} />
-                <AnimatePresence>
-                  {sidebarOpen && (
-                    <motion.span
-                      initial={{ opacity: 0, x: -10 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      exit={{ opacity: 0, x: -10 }}
-                      className="whitespace-nowrap"
-                    >
-                      {item.label}
-                    </motion.span>
-                  )}
-                </AnimatePresence>
-              </NavLink>
-            ))}
-          </nav>
-
-          <div className="p-4 border-t border-miro-border/40 dark:border-white/10 space-y-4">
-            <button
-              onClick={toggleTheme}
-              className={clsx(
-                "flex items-center w-full px-4 py-3 rounded-[12px] font-bold text-sm text-miro-slate hover:bg-slate-100 dark:hover:bg-white/5 dark:text-slate-300 transition-all group",
-                !sidebarOpen && "justify-center"
-              )}
-            >
-              {theme === 'dark' ? (
-                <Sun className={clsx("w-5 h-5 shrink-0 group-hover:scale-110 transition-transform", sidebarOpen && "mr-4")} />
-              ) : (
-                <Moon className={clsx("w-5 h-5 shrink-0 group-hover:scale-110 transition-transform", sidebarOpen && "mr-4")} />
-              )}
-              {sidebarOpen && <span>{theme === 'dark' ? '浅色模式' : '深色模式'}</span>}
-            </button>
-            
-            <div className={clsx(
-              "flex items-center px-4 py-3 rounded-[12px] text-sm font-bold bg-slate-50 dark:bg-white/5",
-              !sidebarOpen && "justify-center",
-              isSyncing ? "text-miro-blue" : syncError ? "text-pastel-coral-dark dark:text-pastel-coral-light" : "text-miro-success"
-            )}>
-              {isSyncing ? (
-                <RefreshCw className={clsx("w-5 h-5 shrink-0 animate-spin", sidebarOpen && "mr-4")} />
-              ) : syncError ? (
-                <CloudOff className={clsx("w-5 h-5 shrink-0", sidebarOpen && "mr-4")} />
-              ) : (
-                <Cloud className={clsx("w-5 h-5 shrink-0", sidebarOpen && "mr-4")} />
-              )}
-              {sidebarOpen && (
-                <span className="truncate">
-                  {isSyncing ? '同步中...' : syncError ? '同步失败' : '已同步'}
-                </span>
-              )}
-            </div>
-          </div>
-        </motion.aside>
+            {renderNavContent()}
+          </motion.aside>
         )}
       </AnimatePresence>
 
