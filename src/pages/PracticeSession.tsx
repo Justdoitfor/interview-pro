@@ -3,6 +3,7 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Question } from '../types';
 import { X, RefreshCcw, Check, XCircle, Sparkles, ChevronLeft, HelpCircle, CheckCircle2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { createDeck, Grade } from 'femto-fsrs';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeRaw from 'rehype-raw';
@@ -13,6 +14,8 @@ import hljs from 'highlight.js';
 import 'highlight.js/styles/github-dark.css';
 import clsx from 'clsx';
 import { useAppStore } from '../store';
+
+const { newCard, gradeCard } = createDeck();
 
 const MarkdownComponents = {
   code({ node, inline, className, children, ...props }: any) {
@@ -84,33 +87,24 @@ export default function PracticeSession() {
 
     const now = Date.now();
     const day = 24 * 60 * 60 * 1000;
-    const ef0 = typeof currentQuestion.easeFactor === 'number' ? currentQuestion.easeFactor : 2.5;
-    const interval0 = typeof currentQuestion.intervalDays === 'number' ? currentQuestion.intervalDays : 0;
 
-    let easeFactor = ef0;
-    let intervalDays = interval0;
-
-    if (level === 0) {
-      easeFactor = Math.max(1.3, ef0 - 0.2);
-      intervalDays = 1;
-    } else if (level === 1) {
-      easeFactor = Math.max(1.3, ef0 - 0.15);
-      intervalDays = Math.max(1, Math.round(interval0 * 1.5) || 2);
-    } else {
-      easeFactor = Math.min(3, ef0 + 0.1);
-      intervalDays = interval0 <= 0 ? 3 : Math.max(1, Math.round(interval0 * easeFactor));
-    }
-
-    // 保留两位小数
-    easeFactor = Number(easeFactor.toFixed(2));
+    const grade = level === 0 ? Grade.AGAIN : level === 1 ? Grade.HARD : Grade.GOOD;
+    const prevReviewedAt = currentQuestion.fsrsLastReviewAt || currentQuestion.lastReviewedAt || 0;
+    const daysSinceReview = prevReviewedAt > 0 ? (now - prevReviewedAt) / day : 0;
+    const nextCard = currentQuestion.fsrsCard
+      ? gradeCard(currentQuestion.fsrsCard, daysSinceReview, grade)
+      : newCard(grade);
+    const intervalDays = Math.max(1, Math.round(nextCard.I));
+    const nextReviewAt = now + nextCard.I * day;
 
     await updateQuestion(currentQuestion.id, {
       masteryLevel: level,
       lastReviewedAt: now,
       reviewCount: (currentQuestion.reviewCount || 0) + 1,
-      easeFactor,
       intervalDays,
-      nextReviewAt: now + intervalDays * day,
+      nextReviewAt,
+      fsrsCard: nextCard,
+      fsrsLastReviewAt: now,
       updatedAt: now
     });
 
@@ -287,8 +281,19 @@ export default function PracticeSession() {
                       <h3 className="text-[24px] font-display font-bold text-miro-black dark:text-white m-0 tracking-[-0.72px]">答案与解析</h3>
                     </div>
                     <div className="text-miro-black/80 dark:text-slate-300 font-sans text-[18px]">
-                      <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeRaw, rehypeKatex]} components={MarkdownComponents}>{currentQuestion.answer}</ReactMarkdown>
+                      <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeRaw, rehypeKatex]} components={MarkdownComponents}>{currentQuestion.answer || '*未提供固定答案*'}</ReactMarkdown>
                     </div>
+                    {currentQuestion.aiAnswer && currentQuestion.aiAnswer.trim().length > 0 && (
+                      <div className="mt-10">
+                        <div className="flex items-center gap-3 mb-6 pb-4 border-b border-miro-black/5 dark:border-white/10">
+                          <Sparkles className="w-6 h-6 text-miro-success" />
+                          <h3 className="text-[24px] font-display font-bold text-miro-black dark:text-white m-0 tracking-[-0.72px]">AI 参考答案</h3>
+                        </div>
+                        <div className="text-miro-black/80 dark:text-slate-300 font-sans text-[18px]">
+                          <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeRaw, rehypeKatex]} components={MarkdownComponents}>{currentQuestion.aiAnswer}</ReactMarkdown>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>

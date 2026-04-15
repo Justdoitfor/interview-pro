@@ -16,6 +16,12 @@ interface AppState {
   gistId: string;
   setGithubToken: (token: string) => void;
   setGistId: (id: string) => void;
+  qwenApiKey: string;
+  qwenBaseUrl: string;
+  qwenModel: string;
+  setQwenApiKey: (key: string) => void;
+  setQwenBaseUrl: (url: string) => void;
+  setQwenModel: (model: string) => void;
 
   // Data States
   questions: Question[];
@@ -52,6 +58,12 @@ export const useAppStore = create<AppState>()(
       gistId: '',
       setGithubToken: (token) => set({ githubToken: token }),
       setGistId: (id) => set({ gistId: id }),
+      qwenApiKey: '',
+      qwenBaseUrl: 'https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions',
+      qwenModel: 'qwen-plus',
+      setQwenApiKey: (key) => set({ qwenApiKey: key }),
+      setQwenBaseUrl: (url) => set({ qwenBaseUrl: url }),
+      setQwenModel: (model) => set({ qwenModel: model }),
 
       questions: [],
       isInitializing: false,
@@ -99,7 +111,7 @@ export const useAppStore = create<AppState>()(
       },
 
       triggerAutoSync: () => {
-        get().syncToCloud();
+        scheduleAutoSync(get);
       },
 
       addQuestion: async (q) => {
@@ -165,8 +177,20 @@ export const useAppStore = create<AppState>()(
         sidebarOpen: state.sidebarOpen, 
         theme: state.theme,
         githubToken: state.githubToken,
-        gistId: state.gistId
+        gistId: state.gistId,
+        qwenApiKey: state.qwenApiKey,
+        qwenBaseUrl: state.qwenBaseUrl,
+        qwenModel: state.qwenModel
       }),
     }
   )
 );
+
+let autoSyncTimer: ReturnType<typeof setTimeout> | null = null;
+function scheduleAutoSync(get: () => AppState) {
+  if (autoSyncTimer) clearTimeout(autoSyncTimer);
+  autoSyncTimer = setTimeout(() => {
+    autoSyncTimer = null;
+    get().syncToCloud();
+  }, 2000);
+}

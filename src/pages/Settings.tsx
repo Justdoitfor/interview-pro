@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { Download, Upload, Database, Cloud, Key, Github, CloudOff, FileJson } from 'lucide-react';
+import { Download, Upload, Database, Cloud, Key, Github, CloudOff, FileJson, Sparkles } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useAppStore } from '../store';
 import { pushToGist, pullFromGist } from '../services/githubSync';
@@ -8,7 +8,7 @@ export default function Settings() {
   const [isExporting, setIsExporting] = useState(false);
 
   // Github Gist Sync states
-  const { githubToken, gistId, setGithubToken, setGistId } = useAppStore();
+  const { githubToken, gistId, setGithubToken, setGistId, qwenApiKey, qwenBaseUrl, qwenModel, setQwenApiKey, setQwenBaseUrl, setQwenModel } = useAppStore();
   const [isSyncing, setIsSyncing] = useState(false);
 
   const questions = useAppStore(state => state.questions);
@@ -161,6 +161,60 @@ export default function Settings() {
                   placeholder="32个字符的哈希字符串..."
                   className="w-full px-4 py-3 bg-white dark:bg-[#111] border border-slate-200 dark:border-white/10 rounded-xl focus:ring-2 focus:ring-purple-500/50 outline-none transition-all text-slate-900 dark:text-white"
                 />
+              </div>
+            </div>
+
+            <div className="pt-6 border-t border-slate-100 dark:border-white/5">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="p-2 bg-emerald-500/10 rounded-xl">
+                  <Sparkles className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-display font-bold text-slate-900 dark:text-white">AI 配置 (Qwen)</h3>
+                  <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">用于在题目编辑页生成 AI 参考答案（不会覆盖固定答案）。</p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-slate-700 dark:text-slate-300 flex items-center">
+                    <Key className="w-4 h-4 mr-2 text-slate-400" />
+                    Qwen API Key
+                  </label>
+                  <input
+                    type="password"
+                    value={qwenApiKey}
+                    onChange={(e) => setQwenApiKey(e.target.value)}
+                    placeholder="sk-xxxxxxxx"
+                    className="w-full px-4 py-3 bg-white dark:bg-[#111] border border-slate-200 dark:border-white/10 rounded-xl focus:ring-2 focus:ring-emerald-500/50 outline-none transition-all text-slate-900 dark:text-white"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-slate-700 dark:text-slate-300 flex items-center">
+                    <Sparkles className="w-4 h-4 mr-2 text-slate-400" />
+                    Qwen Model
+                  </label>
+                  <input
+                    type="text"
+                    value={qwenModel}
+                    onChange={(e) => setQwenModel(e.target.value)}
+                    placeholder="qwen-plus"
+                    className="w-full px-4 py-3 bg-white dark:bg-[#111] border border-slate-200 dark:border-white/10 rounded-xl focus:ring-2 focus:ring-emerald-500/50 outline-none transition-all text-slate-900 dark:text-white"
+                  />
+                </div>
+                <div className="space-y-2 md:col-span-2">
+                  <label className="text-sm font-bold text-slate-700 dark:text-slate-300 flex items-center">
+                    <Sparkles className="w-4 h-4 mr-2 text-slate-400" />
+                    Qwen API Base URL
+                  </label>
+                  <input
+                    type="text"
+                    value={qwenBaseUrl}
+                    onChange={(e) => setQwenBaseUrl(e.target.value)}
+                    placeholder="https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions"
+                    className="w-full px-4 py-3 bg-white dark:bg-[#111] border border-slate-200 dark:border-white/10 rounded-xl focus:ring-2 focus:ring-emerald-500/50 outline-none transition-all text-slate-900 dark:text-white"
+                  />
+                </div>
               </div>
             </div>
 

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { v4 as uuidv4 } from 'uuid';
-import { ArrowLeft, Save, Eye, Edit3 } from 'lucide-react';
+import { ArrowLeft, Save, Eye, Edit3, Sparkles, RefreshCcw } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeRaw from 'rehype-raw';
@@ -15,6 +15,7 @@ import { Question } from '../types';
 import { motion } from 'framer-motion';
 import clsx from 'clsx';
 import { useAppStore } from '../store';
+import { generateQwenAnswer } from '../services/qwen';
 
 type QuestionFormData = Omit<
   Question,
@@ -27,6 +28,8 @@ type QuestionFormData = Omit<
   | 'nextReviewAt'
   | 'intervalDays'
   | 'easeFactor'
+  | 'fsrsCard'
+  | 'fsrsLastReviewAt'
 >;
 
 const MarkdownComponents = {
@@ -45,8 +48,10 @@ export default function QuestionEditor() {
   const navigate = useNavigate();
   const [isPreview, setIsPreview] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isGeneratingAi, setIsGeneratingAi] = useState(false);
   const [tagInput, setTagInput] = useState('');
 
+  const { qwenApiKey, qwenBaseUrl, qwenModel } = useAppStore();
   const questions = useAppStore(state => state.questions);
   const addQuestion = useAppStore(state => state.addQuestion);
   const updateQuestion = useAppStore(state => state.updateQuestion);
@@ -57,13 +62,16 @@ export default function QuestionEditor() {
       difficulty: 'medium',
       tags: [],
       content: '',
-      answer: ''
+      answer: '',
+      aiAnswer: '',
+      aiAnswerUpdatedAt: 0
     }
   });
 
   const tags = watch('tags');
   const content = watch('content');
   const answer = watch('answer');
+  const aiAnswer = watch('aiAnswer');
 
   useEffect(() => {
     if (id) {
@@ -74,11 +82,52 @@ export default function QuestionEditor() {
           difficulty: q.difficulty,
           tags: q.tags,
           content: q.content,
-          answer: q.answer
+          answer: q.answer,
+          aiAnswer: q.aiAnswer || '',
+          aiAnswerUpdatedAt: q.aiAnswerUpdatedAt || 0
         });
       }
     }
   }, [id, questions, reset]);
+
+  const handleGenerateAiAnswer = async () => {
+    const title = watch('title') || '';
+    const contentValue = watch('content') || '';
+    if (!qwenApiKey) {
+      alert('请先在「数据设置」中配置 Qwen API Key');
+      return;
+    }
+    if (!title.trim()) {
+      alert('请先填写题目标题');
+      return;
+    }
+    setIsGeneratingAi(true);
+    try {
+      const generated = await generateQwenAnswer({
+        apiKey: qwenApiKey,
+        baseUrl: qwenBaseUrl,
+        model: qwenModel,
+        messages: [
+          {
+            role: 'system',
+            content:
+              '你是一名资深面试官与工程师。请用中文输出结构化的 Markdown 答案，包含：核心要点、常见追问、示例代码（如适用）、边界与陷阱、总结。答案要精炼但覆盖关键细节。',
+          },
+          {
+            role: 'user',
+            content: `题目标题：${title}\n\n题目描述：\n${contentValue || '(无)'}\n`,
+          },
+        ],
+      });
+      setValue('aiAnswer', generated, { shouldDirty: true });
+      setValue('aiAnswerUpdatedAt', Date.now(), { shouldDirty: true });
+    } catch (e: any) {
+      console.error(e);
+      alert(e?.message || '生成失败，请检查 Qwen 配置与网络');
+    } finally {
+      setIsGeneratingAi(false);
+    }
+  };
 
   const onSubmit = async (data: QuestionFormData) => {
     setIsSubmitting(true);
@@ -244,7 +293,18 @@ export default function QuestionEditor() {
               </div>
 
               <div>
-                <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2 uppercase tracking-wider">答案与解析 (支持 Markdown) <span className="text-emerald-500">*</span></label>
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-2">
+                  <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">答案与解析 (支持 Markdown) <span className="text-emerald-500">*</span></label>
+                  <button
+                    type="button"
+                    onClick={handleGenerateAiAnswer}
+                    disabled={isGeneratingAi || !qwenApiKey}
+                    className="inline-flex items-center justify-center px-4 py-2 rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-[#111] text-slate-700 dark:text-slate-200 font-bold text-sm hover:border-emerald-500/40 hover:bg-emerald-50/40 dark:hover:bg-emerald-500/10 transition-all disabled:opacity-50"
+                  >
+                    {isGeneratingAi ? <RefreshCcw className="w-4 h-4 mr-2 animate-spin" /> : <Sparkles className="w-4 h-4 mr-2" />}
+                    生成 AI 参考答案
+                  </button>
+                </div>
                 <textarea
                   {...register('answer', { required: '请输入答案' })}
                   rows={12}
@@ -252,6 +312,16 @@ export default function QuestionEditor() {
                   placeholder="提供详细的答案和解析..."
                 />
                 {errors.answer && <p className="mt-2 text-sm text-rose-500 font-medium">{errors.answer.message}</p>}
+              </div>
+
+              <div>
+                <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2 uppercase tracking-wider">AI 参考答案 (Qwen)</label>
+                <textarea
+                  {...register('aiAnswer')}
+                  rows={10}
+                  className="w-full px-5 py-4 bg-slate-50/50 dark:bg-[#111] border border-slate-200 dark:border-white/10 rounded-2xl text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 outline-none transition-all font-mono text-sm leading-relaxed resize-y"
+                  placeholder="AI 生成的参考答案会显示在这里（不会覆盖上面的固定答案）..."
+                />
               </div>
             </div>
           </>
@@ -290,6 +360,14 @@ export default function QuestionEditor() {
                 <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeRaw, rehypeKatex]} components={MarkdownComponents}>{answer || '*未提供答案*'}</ReactMarkdown>
               </div>
             </div>
+            {aiAnswer && aiAnswer.trim().length > 0 && (
+              <div>
+                <h3 className="text-xl font-display font-bold text-slate-900 dark:text-white mb-6">AI 参考答案</h3>
+                <div className="bg-blue-50/50 dark:bg-blue-500/5 p-8 rounded-3xl border border-blue-200/50 dark:border-blue-500/10">
+                  <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeRaw, rehypeKatex]} components={MarkdownComponents}>{aiAnswer}</ReactMarkdown>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </form>
