@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Question } from '../types';
 import { X, RefreshCcw, Check, XCircle, Sparkles, ChevronLeft } from 'lucide-react';
@@ -36,11 +36,14 @@ export default function PracticeSession() {
   const [isFlipped, setIsFlipped] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isFinished, setIsFinished] = useState(false);
+  const isInitialized = useRef(false);
 
   const allQuestions = useAppStore(state => state.questions);
   const updateQuestion = useAppStore(state => state.updateQuestion);
 
   useEffect(() => {
+    if (isInitialized.current) return;
+    isInitialized.current = true;
     const shuffle = <T,>(arr: T[]) => {
       const a = [...arr];
       for (let i = a.length - 1; i > 0; i--) {
@@ -180,8 +183,8 @@ export default function PracticeSession() {
     <div className="min-h-screen bg-[#fafafa] dark:bg-[#0a0a0a] flex flex-col noise-bg overflow-hidden">
       {/* Header */}
       <header className="h-20 flex flex-col justify-center px-4 md:px-8 border-b border-slate-200/50 dark:border-white/5 bg-white/50 dark:bg-[#0a0a0a]/50 backdrop-blur-xl z-20 w-full max-w-[1400px] mx-auto">
-        <div className="flex items-center justify-between w-full mb-3 mt-2">
-          <div className="flex items-center gap-2">
+        <div className="flex items-center justify-between w-full mb-3 mt-2 gap-4">
+          <div className="flex items-center gap-2 shrink-0">
             <button onClick={() => navigate('/practice')} className="p-2 text-slate-500 hover:bg-slate-200/50 dark:hover:bg-white/5 rounded-full transition-colors" title="退出练习">
               <X className="w-6 h-6" />
             </button>
@@ -194,7 +197,7 @@ export default function PracticeSession() {
                   setCurrentIndex(prevIndex);
                   setIsFlipped(prevQ.reviewCount === 0);
                 }} 
-                className="flex items-center px-3 py-1.5 text-sm font-bold text-slate-600 dark:text-slate-300 bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 rounded-full transition-colors"
+                className="flex items-center px-3 py-1.5 text-sm font-bold text-slate-600 dark:text-slate-300 bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 rounded-full transition-colors shrink-0"
               >
                 <ChevronLeft className="w-4 h-4 mr-1" />
                 上一题
@@ -203,7 +206,13 @@ export default function PracticeSession() {
           </div>
           
           {/* Progress Indicator Combined */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center justify-center flex-1 min-w-0">
+            <h3 className="text-base md:text-lg font-bold text-slate-700 dark:text-slate-200 truncate px-4">
+              {currentQuestion.title}
+            </h3>
+          </div>
+
+          <div className="flex items-center gap-3 shrink-0">
             <div className="text-sm font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 px-3 py-1 rounded-full">
               {currentIndex + 1} <span className="opacity-50">/</span> {questions.length}
             </div>
@@ -253,11 +262,8 @@ export default function PracticeSession() {
                         </span>
                       ))}
                     </div>
-                    <h2 className="text-3xl md:text-4xl font-display font-bold text-center text-slate-900 dark:text-white mb-8 leading-tight">
-                      {currentQuestion.title}
-                    </h2>
                     {currentQuestion.content && (
-                      <div className="prose prose-slate prose-lg dark:prose-invert max-w-none mx-auto text-center text-slate-600 dark:text-slate-400">
+                      <div className="prose prose-slate prose-lg dark:prose-invert max-w-none mx-auto text-center text-slate-600 dark:text-slate-400 mt-4">
                         <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeRaw, rehypeKatex]} components={MarkdownComponents}>{currentQuestion.content}</ReactMarkdown>
                       </div>
                     )}

@@ -23,22 +23,22 @@ export default function Layout() {
           sidebarOpen ? "w-56" : "w-20"
         )}
       >
-        <div className="flex items-center justify-between h-20 px-6 border-b border-slate-200/50 dark:border-white/5 relative">
-          <div className="flex items-center gap-3">
+        <div className="flex flex-col items-center justify-center pt-8 pb-4 relative">
+          <div className="flex flex-col items-center gap-2">
             <AnimatePresence>
               <motion.span
                 key={sidebarOpen ? 'brand-full' : 'brand-mini'}
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -10 }}
-                className={clsx(
-                  "text-xl font-display font-bold text-slate-900 dark:text-white whitespace-nowrap",
-                  !sidebarOpen && "mx-auto"
-                )}
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.9 }}
+                className="text-xl font-display font-bold text-slate-900 dark:text-white whitespace-nowrap"
               >
                 {sidebarOpen ? 'fkcoding' : 'fk'}
               </motion.span>
             </AnimatePresence>
+            <span className="w-10 h-10 shrink-0 rounded-xl bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center text-white shadow-lg shadow-emerald-500/20 overflow-hidden">
+              <img src="/src/assets/nm.svg" alt="fkcoding" className="w-6 h-6 object-contain" />
+            </span>
           </div>
         </div>
 
