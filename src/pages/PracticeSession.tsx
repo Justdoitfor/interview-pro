@@ -5,6 +5,10 @@ import { X, RefreshCcw, Check, XCircle, Sparkles, ChevronLeft } from 'lucide-rea
 import { motion, AnimatePresence } from 'framer-motion';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import rehypeRaw from 'rehype-raw';
+import remarkMath from 'remark-math';
+import rehypeKatex from 'rehype-katex';
+import 'katex/dist/katex.min.css';
 import hljs from 'highlight.js';
 import 'highlight.js/styles/github-dark.css';
 import clsx from 'clsx';
@@ -250,7 +254,7 @@ export default function PracticeSession() {
                     </h2>
                     {currentQuestion.content && (
                       <div className="prose prose-slate prose-lg dark:prose-invert max-w-none mx-auto text-center text-slate-600 dark:text-slate-400">
-                        <ReactMarkdown remarkPlugins={[remarkGfm]} components={MarkdownComponents}>{currentQuestion.content}</ReactMarkdown>
+                        <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeRaw, rehypeKatex]} components={MarkdownComponents}>{currentQuestion.content}</ReactMarkdown>
                       </div>
                     )}
                   </div>
@@ -261,7 +265,7 @@ export default function PracticeSession() {
                       <h3 className="text-xl font-display font-bold text-slate-900 dark:text-white m-0">答案与解析</h3>
                     </div>
                     <div className="text-slate-700 dark:text-slate-300">
-                      <ReactMarkdown remarkPlugins={[remarkGfm]} components={MarkdownComponents}>{currentQuestion.answer}</ReactMarkdown>
+                      <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeRaw, rehypeKatex]} components={MarkdownComponents}>{currentQuestion.answer}</ReactMarkdown>
                     </div>
                   </div>
                 )}

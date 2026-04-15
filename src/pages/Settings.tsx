@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Download, Upload, Database, Cloud, Key, Github, CloudOff } from 'lucide-react';
+import { useState, useRef } from 'react';
+import { Download, Upload, Database, Cloud, Key, Github, CloudOff, FileJson } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useAppStore } from '../store';
 import { pushToGist, pullFromGist } from '../services/githubSync';
@@ -13,6 +13,30 @@ export default function Settings() {
 
   const questions = useAppStore(state => state.questions);
   const setQuestions = useAppStore(state => state.setQuestions);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleImportJson = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      const text = await file.text();
+      const payload = JSON.parse(text);
+      if (payload && Array.isArray(payload.questions)) {
+        if (window.confirm(`即将导入 ${payload.questions.length} 道题目，此操作将覆盖当前本地数据，确定吗？`)) {
+          await setQuestions(payload.questions);
+          alert('成功从本地 JSON 恢复题库！');
+        }
+      } else {
+        alert('文件格式不正确，缺少 questions 字段');
+      }
+    } catch (error) {
+      console.error(error);
+      alert('解析 JSON 文件失败');
+    } finally {
+      e.target.value = '';
+    }
+  };
 
   const handleExport = async () => {
     setIsExporting(true);
@@ -172,16 +196,34 @@ export default function Settings() {
             </div>
           </div>
 
-          <button
-            onClick={handleExport}
-            disabled={isExporting}
-            className="flex items-center justify-center p-6 border-2 border-slate-200 dark:border-white/10 rounded-2xl hover:border-blue-500/50 dark:hover:border-blue-500/50 hover:bg-blue-50/50 dark:hover:bg-blue-500/10 transition-all group disabled:opacity-50 w-full md:w-1/2"
-          >
-            <Download className="w-6 h-6 mr-3 text-slate-400 group-hover:text-blue-500 transition-colors" />
-            <span className="text-lg font-bold text-slate-700 dark:text-slate-300 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
-              {isExporting ? '导出中...' : '导出备份 (JSON)'}
-            </span>
-          </button>
+          <div className="flex flex-col md:flex-row gap-4 w-full">
+            <button
+              onClick={handleExport}
+              disabled={isExporting}
+              className="flex-1 flex items-center justify-center p-6 border-2 border-slate-200 dark:border-white/10 rounded-2xl hover:border-blue-500/50 dark:hover:border-blue-500/50 hover:bg-blue-50/50 dark:hover:bg-blue-500/10 transition-all group disabled:opacity-50"
+            >
+              <Download className="w-6 h-6 mr-3 text-slate-400 group-hover:text-blue-500 transition-colors" />
+              <span className="text-lg font-bold text-slate-700 dark:text-slate-300 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                {isExporting ? '导出中...' : '导出备份 (JSON)'}
+              </span>
+            </button>
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleImportJson}
+              accept=".json"
+              className="hidden"
+            />
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              className="flex-1 flex items-center justify-center p-6 border-2 border-slate-200 dark:border-white/10 rounded-2xl hover:border-emerald-500/50 dark:hover:border-emerald-500/50 hover:bg-emerald-50/50 dark:hover:bg-emerald-500/10 transition-all group"
+            >
+              <FileJson className="w-6 h-6 mr-3 text-slate-400 group-hover:text-emerald-500 transition-colors" />
+              <span className="text-lg font-bold text-slate-700 dark:text-slate-300 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
+                恢复备份 (JSON)
+              </span>
+            </button>
+          </div>
         </div>
       </div>
     </motion.div>

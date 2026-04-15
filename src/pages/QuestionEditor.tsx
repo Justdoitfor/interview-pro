@@ -5,6 +5,10 @@ import { v4 as uuidv4 } from 'uuid';
 import { ArrowLeft, Save, Eye, Edit3 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import rehypeRaw from 'rehype-raw';
+import remarkMath from 'remark-math';
+import rehypeKatex from 'rehype-katex';
+import 'katex/dist/katex.min.css';
 import hljs from 'highlight.js';
 import 'highlight.js/styles/github-dark.css';
 import { Question } from '../types';
@@ -275,7 +279,7 @@ export default function QuestionEditor() {
               <div>
                 <h3 className="text-xl font-display font-bold text-slate-900 dark:text-white mb-6">题目描述</h3>
                 <div className="bg-slate-50/50 dark:bg-[#111]/50 p-8 rounded-3xl border border-slate-200/50 dark:border-white/5">
-                  <ReactMarkdown remarkPlugins={[remarkGfm]} components={MarkdownComponents}>{content}</ReactMarkdown>
+                  <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeRaw, rehypeKatex]} components={MarkdownComponents}>{content}</ReactMarkdown>
                 </div>
               </div>
             )}
@@ -283,7 +287,7 @@ export default function QuestionEditor() {
             <div>
               <h3 className="text-xl font-display font-bold text-slate-900 dark:text-white mb-6">答案与解析</h3>
               <div className="bg-emerald-50/50 dark:bg-emerald-500/5 p-8 rounded-3xl border border-emerald-200/50 dark:border-emerald-500/10">
-                <ReactMarkdown remarkPlugins={[remarkGfm]} components={MarkdownComponents}>{answer || '*未提供答案*'}</ReactMarkdown>
+                <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeRaw, rehypeKatex]} components={MarkdownComponents}>{answer || '*未提供答案*'}</ReactMarkdown>
               </div>
             </div>
           </div>
