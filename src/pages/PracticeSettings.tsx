@@ -29,16 +29,16 @@ export default function PracticeSettings() {
         <motion.div 
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
-          className="w-20 h-20 bg-gradient-to-br from-emerald-400 to-emerald-600 text-white rounded-3xl flex items-center justify-center mx-auto shadow-2xl shadow-emerald-500/30"
+          className="w-20 h-20 bg-pastel-teal-light dark:bg-pastel-teal-dark rounded-[24px] flex items-center justify-center mx-auto shadow-soft border border-miro-border/40 dark:border-white/10"
         >
-          <PlayCircle className="w-10 h-10" />
+          <PlayCircle className="w-10 h-10 text-miro-blue dark:text-pastel-teal-light" />
         </motion.div>
         <div>
           <motion.h1 
             initial={{ y: 20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.1 }}
-            className="text-4xl md:text-5xl font-display font-bold text-slate-900 dark:text-white tracking-tight mb-4"
+            className="text-[48px] font-display font-bold text-miro-black dark:text-white tracking-[-1.44px] mb-4"
           >
             沉浸式刷题
           </motion.h1>
@@ -46,7 +46,7 @@ export default function PracticeSettings() {
             initial={{ y: 20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.2 }}
-            className="text-lg text-slate-500 dark:text-slate-400 max-w-xl mx-auto"
+            className="text-[18px] text-miro-slate dark:text-slate-400 max-w-xl mx-auto font-sans"
           >
             选择您的复习范围，开启无干扰的闪卡练习模式。
           </motion.p>
@@ -62,17 +62,16 @@ export default function PracticeSettings() {
         <button
           onClick={() => setMode('all')}
           className={clsx(
-            "relative p-8 rounded-3xl border-2 text-left transition-all duration-300 group overflow-hidden",
+            "relative p-8 rounded-[24px] border-2 text-left transition-all duration-300 group overflow-hidden bg-white dark:bg-[#111]",
             mode === 'all' 
-              ? "border-emerald-500 bg-emerald-50/50 dark:bg-emerald-500/10 shadow-xl shadow-emerald-500/10" 
-              : "border-slate-200 dark:border-white/5 glass-panel hover:border-emerald-500/50"
+              ? "border-miro-blue bg-miro-blue/5 dark:bg-miro-blue/10 shadow-soft" 
+              : "border-miro-border/40 dark:border-white/10 hover:border-miro-blue/50 hover:shadow-soft"
           )}
         >
-          <div className={clsx("absolute inset-0 bg-gradient-to-br from-emerald-500/10 to-transparent opacity-0 transition-opacity duration-500", mode === 'all' && "opacity-100")} />
-          <Layers className={clsx("w-10 h-10 mb-6 transition-colors", mode === 'all' ? "text-emerald-500" : "text-slate-400 group-hover:text-emerald-400")} />
-          <h3 className="text-2xl font-display font-bold text-slate-900 dark:text-white mb-3">全部题目</h3>
-          <p className="text-slate-500 dark:text-slate-400 mb-6">按随机顺序复习题库中的所有题目。</p>
-          <div className={clsx("inline-flex items-center px-3 py-1 rounded-full text-sm font-medium", mode === 'all' ? "bg-emerald-500/20 text-emerald-700 dark:text-emerald-400" : "bg-slate-100 dark:bg-white/10 text-slate-600 dark:text-slate-300")}>
+          <Layers className={clsx("w-10 h-10 mb-6 transition-colors", mode === 'all' ? "text-miro-blue" : "text-miro-slate group-hover:text-miro-blue")} />
+          <h3 className="text-[24px] font-display font-bold text-miro-black dark:text-white mb-3 tracking-[-0.72px]">全部题目</h3>
+          <p className="text-[16px] text-miro-slate dark:text-slate-400 mb-6 font-sans leading-[1.45]">按随机顺序复习题库中的所有题目。</p>
+          <div className={clsx("inline-flex items-center px-4 py-1.5 rounded-[8px] text-[14px] font-bold tracking-wider uppercase", mode === 'all' ? "bg-miro-blue/20 text-miro-blue" : "bg-slate-100 dark:bg-white/10 text-miro-slate dark:text-slate-300")}>
             共 {stats?.total || 0} 题
           </div>
         </button>
@@ -80,17 +79,16 @@ export default function PracticeSettings() {
         <button
           onClick={() => setMode('review')}
           className={clsx(
-            "relative p-8 rounded-3xl border-2 text-left transition-all duration-300 group overflow-hidden",
+            "relative p-8 rounded-[24px] border-2 text-left transition-all duration-300 group overflow-hidden bg-white dark:bg-[#111]",
             mode === 'review' 
-              ? "border-amber-500 bg-amber-50/50 dark:bg-amber-500/10 shadow-xl shadow-amber-500/10" 
-              : "border-slate-200 dark:border-white/5 glass-panel hover:border-amber-500/50"
+              ? "border-pastel-yellow-dark dark:border-pastel-orange-light bg-pastel-orange-light/20 dark:bg-pastel-orange-light/10 shadow-soft" 
+              : "border-miro-border/40 dark:border-white/10 hover:border-pastel-yellow-dark/50 dark:hover:border-pastel-orange-light/50 hover:shadow-soft"
           )}
         >
-          <div className={clsx("absolute inset-0 bg-gradient-to-br from-amber-500/10 to-transparent opacity-0 transition-opacity duration-500", mode === 'review' && "opacity-100")} />
-          <Clock className={clsx("w-10 h-10 mb-6 transition-colors", mode === 'review' ? "text-amber-500" : "text-slate-400 group-hover:text-amber-400")} />
-          <h3 className="text-2xl font-display font-bold text-slate-900 dark:text-white mb-3">智能复习</h3>
-          <p className="text-slate-500 dark:text-slate-400 mb-6">专注复习概念模糊或近期未看的题目。</p>
-          <div className={clsx("inline-flex items-center px-3 py-1 rounded-full text-sm font-medium", mode === 'review' ? "bg-amber-500/20 text-amber-700 dark:text-amber-400" : "bg-slate-100 dark:bg-white/10 text-slate-600 dark:text-slate-300")}>
+          <Clock className={clsx("w-10 h-10 mb-6 transition-colors", mode === 'review' ? "text-pastel-yellow-dark dark:text-pastel-orange-light" : "text-miro-slate group-hover:text-pastel-yellow-dark dark:group-hover:text-pastel-orange-light")} />
+          <h3 className="text-[24px] font-display font-bold text-miro-black dark:text-white mb-3 tracking-[-0.72px]">智能复习</h3>
+          <p className="text-[16px] text-miro-slate dark:text-slate-400 mb-6 font-sans leading-[1.45]">专注复习概念模糊或近期未看的题目。</p>
+          <div className={clsx("inline-flex items-center px-4 py-1.5 rounded-[8px] text-[14px] font-bold tracking-wider uppercase", mode === 'review' ? "bg-pastel-orange-light text-[#cc7a00] dark:bg-pastel-orange-light/20 dark:text-pastel-orange-light" : "bg-slate-100 dark:bg-white/10 text-miro-slate dark:text-slate-300")}>
             {stats?.reviewQs || 0} 题待复习
           </div>
         </button>
@@ -98,17 +96,16 @@ export default function PracticeSettings() {
         <button
           onClick={() => setMode('new')}
           className={clsx(
-            "relative p-8 rounded-3xl border-2 text-left transition-all duration-300 group overflow-hidden",
+            "relative p-8 rounded-[24px] border-2 text-left transition-all duration-300 group overflow-hidden bg-white dark:bg-[#111]",
             mode === 'new' 
-              ? "border-blue-500 bg-blue-50/50 dark:bg-blue-500/10 shadow-xl shadow-blue-500/10" 
-              : "border-slate-200 dark:border-white/5 glass-panel hover:border-blue-500/50"
+              ? "border-miro-success bg-miro-success/10 shadow-soft" 
+              : "border-miro-border/40 dark:border-white/10 hover:border-miro-success/50 hover:shadow-soft"
           )}
         >
-          <div className={clsx("absolute inset-0 bg-gradient-to-br from-blue-500/10 to-transparent opacity-0 transition-opacity duration-500", mode === 'new' && "opacity-100")} />
-          <Star className={clsx("w-10 h-10 mb-6 transition-colors", mode === 'new' ? "text-blue-500" : "text-slate-400 group-hover:text-blue-400")} />
-          <h3 className="text-2xl font-display font-bold text-slate-900 dark:text-white mb-3">只看新题</h3>
-          <p className="text-slate-500 dark:text-slate-400 mb-6">专门攻克尚未掌握的全新面试题。</p>
-          <div className={clsx("inline-flex items-center px-3 py-1 rounded-full text-sm font-medium", mode === 'new' ? "bg-blue-500/20 text-blue-700 dark:text-blue-400" : "bg-slate-100 dark:bg-white/10 text-slate-600 dark:text-slate-300")}>
+          <Star className={clsx("w-10 h-10 mb-6 transition-colors", mode === 'new' ? "text-miro-success" : "text-miro-slate group-hover:text-miro-success")} />
+          <h3 className="text-[24px] font-display font-bold text-miro-black dark:text-white mb-3 tracking-[-0.72px]">只看新题</h3>
+          <p className="text-[16px] text-miro-slate dark:text-slate-400 mb-6 font-sans leading-[1.45]">专门攻克尚未掌握的全新面试题。</p>
+          <div className={clsx("inline-flex items-center px-4 py-1.5 rounded-[8px] text-[14px] font-bold tracking-wider uppercase", mode === 'new' ? "bg-miro-success/20 text-miro-success" : "bg-slate-100 dark:bg-white/10 text-miro-slate dark:text-slate-300")}>
             {stats?.newQs || 0} 题未掌握
           </div>
         </button>
@@ -123,10 +120,9 @@ export default function PracticeSettings() {
         <button
           onClick={handleStart}
           disabled={!stats || stats.total === 0}
-          className="group relative flex items-center justify-center px-12 py-5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-full text-xl font-bold hover:scale-105 transition-all shadow-2xl shadow-slate-900/20 dark:shadow-white/20 disabled:opacity-50 disabled:hover:scale-100 disabled:shadow-none overflow-hidden"
+          className="group relative flex items-center justify-center px-12 py-4 bg-miro-blue text-white rounded-[8px] text-[17.5px] font-display font-bold hover:bg-miro-bluePressed transition-colors shadow-soft disabled:opacity-50 disabled:hover:bg-miro-blue disabled:shadow-none"
         >
-          <div className="absolute inset-0 bg-gradient-to-r from-emerald-500 to-blue-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-          <span className="relative flex items-center group-hover:text-white transition-colors">
+          <span className="relative flex items-center transition-colors">
             {stats?.total === 0 ? '题库为空' : '开始刷题'}
             <ArrowRight className="w-6 h-6 ml-3 group-hover:translate-x-1 transition-transform" />
           </span>

@@ -8,11 +8,30 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        sans: ['"Plus Jakarta Sans"', 'sans-serif'],
-        display: ['Outfit', 'sans-serif'],
+        sans: ['"Noto Sans"', 'Inter', 'sans-serif'],
+        display: ['"Roobert PRO"', '"Roobert PRO Medium"', 'system-ui', 'sans-serif'],
         mono: ['"JetBrains Mono"', 'monospace'],
       },
       colors: {
+        miro: {
+          black: '#1c1c1e',
+          blue: '#5b76fe',
+          bluePressed: '#2a41b6',
+          success: '#00b473',
+          border: '#c7cad5',
+          placeholder: '#a5a8b5',
+          slate: '#555a6a',
+        },
+        pastel: {
+          coral: { light: '#ffc6c6', dark: '#600000' },
+          rose: { light: '#ffd8f4' },
+          teal: { light: '#c3faf5', dark: '#187574' },
+          orange: { light: '#ffe6cd' },
+          yellow: { dark: '#746019' },
+          moss: { dark: '#187574' },
+          pink: { soft: '#fde0f0' },
+          red: { light: '#fbd4d4', dark: '#e3c5c5' },
+        },
         slate: {
           950: '#0a0a0a',
           900: '#121212',
@@ -34,6 +53,11 @@ export default {
         blue: {
           500: '#3b82f6',
         }
+      },
+      boxShadow: {
+        'ring': 'rgb(224, 226, 232) 0px 0px 0px 1px',
+        'ring-blue': 'rgb(91, 118, 254) 0px 0px 0px 1px',
+        'soft': '0 4px 20px -2px rgba(0, 0, 0, 0.05)',
       },
       backgroundImage: {
         'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',

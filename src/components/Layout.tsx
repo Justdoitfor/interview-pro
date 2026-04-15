@@ -15,151 +15,134 @@ export default function Layout() {
   ];
 
   return (
-    <div className="flex h-screen overflow-hidden bg-[#fafafa] dark:bg-[#0a0a0a] transition-colors duration-300 noise-bg">
-      {/* Sidebar */}
-      <aside
-        className={clsx(
-          "fixed inset-y-4 left-4 z-50 flex flex-col rounded-3xl transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] glass-panel",
-          sidebarOpen ? "w-56" : "w-20"
-        )}
-      >
-        <div className="flex flex-col items-center justify-center pt-8 pb-4 relative">
-          <div className="flex flex-col items-center gap-2">
-            <AnimatePresence>
-              <motion.span
-                key={sidebarOpen ? 'brand-full' : 'brand-mini'}
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.9 }}
-                className="text-xl font-display font-bold text-slate-900 dark:text-white whitespace-nowrap"
+    <div className="min-h-screen bg-white dark:bg-miro-black flex text-miro-black dark:text-white font-sans">
+      <AnimatePresence mode="wait">
+        {sidebarOpen ? (
+          <motion.aside
+            key="sidebar-open"
+            initial={{ width: 80 }}
+            animate={{ width: 280 }}
+            exit={{ width: 80 }}
+            transition={{ duration: 0.3, ease: [0.23, 1, 0.32, 1] }}
+            className="flex-shrink-0 h-screen sticky top-0 bg-white dark:bg-miro-black border-r border-miro-border/40 shadow-ring z-40 overflow-hidden flex flex-col"
+          >
+            {/* Logo Area */}
+            <div className="flex flex-col items-center justify-center pt-8 pb-6 relative">
+              <div className="flex flex-col items-center gap-3">
+                <img src="/src/assets/nm.svg" alt="fkcoding" className="w-10 h-10 object-contain" />
+                <AnimatePresence>
+                  <motion.span
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.9 }}
+                    className="text-[24px] font-display font-bold text-miro-black dark:text-white whitespace-nowrap tracking-[-0.72px]"
+                  >
+                    fkcoding
+                  </motion.span>
+                </AnimatePresence>
+              </div>
+              <button 
+                onClick={toggleSidebar}
+                className="absolute right-4 top-8 p-1.5 text-miro-slate hover:bg-slate-100 dark:hover:bg-white/10 rounded-lg transition-colors"
               >
-                {sidebarOpen ? 'fkcoding' : 'fk'}
-              </motion.span>
-            </AnimatePresence>
-            <span className="w-10 h-10 shrink-0 rounded-xl bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center text-white shadow-lg shadow-emerald-500/20 overflow-hidden">
-              <img src="/src/assets/nm.svg" alt="fkcoding" className="w-6 h-6 object-contain" />
-            </span>
-          </div>
-        </div>
+                <PanelLeftClose className="w-4 h-4" />
+              </button>
+            </div>
 
-        <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
-          {navItems.map((item) => (
-            <NavLink
-              key={item.to}
-              to={item.to}
-              className={({ isActive }) =>
-                clsx(
-                  "relative flex items-center px-4 py-3 rounded-2xl transition-colors group",
-                  isActive
-                    ? "text-emerald-700 dark:text-emerald-400 font-medium"
-                    : "text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200"
-                )
-              }
-            >
-              {({ isActive }) => (
-                <>
-                  {isActive && (
-                    <motion.div
-                      layoutId="active-nav-bg"
-                      className="absolute inset-0 bg-emerald-500/10 dark:bg-emerald-500/20 rounded-2xl"
-                      initial={false}
-                      transition={{ type: "spring", stiffness: 400, damping: 30 }}
-                    />
+          </motion.aside>
+        ) : (
+          <motion.aside
+            key="sidebar-closed"
+            initial={{ width: 280 }}
+            animate={{ width: 80 }}
+            exit={{ width: 280 }}
+            transition={{ duration: 0.3, ease: [0.23, 1, 0.32, 1] }}
+            className="flex-shrink-0 h-screen sticky top-0 bg-white dark:bg-miro-black border-r border-miro-border/40 shadow-ring z-40 overflow-hidden flex flex-col"
+          >
+            <div className="flex flex-col items-center justify-center pt-8 pb-6 relative">
+              <img src="/src/assets/nm.svg" alt="fkcoding" className="w-8 h-8 object-contain mb-4" />
+              <button 
+                onClick={toggleSidebar}
+                className="p-2 text-miro-slate hover:bg-slate-100 dark:hover:bg-white/10 rounded-lg transition-colors"
+              >
+                <PanelLeft className="w-5 h-5" />
+              </button>
+            </div>
+          <nav className="flex-1 px-4 py-2 space-y-2 overflow-y-auto">
+            {navItems.map((item) => (
+              <NavLink
+                key={item.to}
+                to={item.to}
+                className={({ isActive }) => clsx(
+                  "flex items-center px-4 py-3 rounded-[12px] font-bold text-sm transition-all group",
+                  isActive 
+                    ? "bg-miro-blue text-white shadow-soft" 
+                    : "text-miro-slate hover:bg-slate-100 dark:hover:bg-white/5 dark:text-slate-300"
+                )}
+              >
+                <item.icon className={clsx(
+                  "w-5 h-5 shrink-0 transition-transform group-hover:scale-110",
+                  sidebarOpen ? "mr-4" : "mx-auto"
+                )} />
+                <AnimatePresence>
+                  {sidebarOpen && (
+                    <motion.span
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: -10 }}
+                      className="whitespace-nowrap"
+                    >
+                      {item.label}
+                    </motion.span>
                   )}
-                  <item.icon className={clsx("shrink-0 relative z-10", sidebarOpen ? "w-5 h-5 mr-3" : "w-6 h-6 mx-auto")} />
-                  {sidebarOpen && <span className="relative z-10 whitespace-nowrap">{item.label}</span>}
-                </>
+                </AnimatePresence>
+              </NavLink>
+            ))}
+          </nav>
+
+          <div className="p-4 border-t border-miro-border/40 dark:border-white/10 space-y-4">
+            <button
+              onClick={toggleTheme}
+              className={clsx(
+                "flex items-center w-full px-4 py-3 rounded-[12px] font-bold text-sm text-miro-slate hover:bg-slate-100 dark:hover:bg-white/5 dark:text-slate-300 transition-all group",
+                !sidebarOpen && "justify-center"
               )}
-            </NavLink>
-          ))}
-        </nav>
-
-        <div className="p-4 border-t border-slate-200/50 dark:border-white/5 space-y-2">
-          {/* Cloud Sync Status */}
-          <div 
-            className="flex items-center w-full p-3 rounded-2xl transition-all group relative cursor-default"
-            title={
-              !githubToken ? '未配置云端同步' :
-              isSyncing ? '正在同步到云端...' :
-              syncError ? `同步失败: ${syncError}` :
-              '云端同步已开启'
-            }
-          >
-            <div className={clsx("shrink-0 relative z-10", sidebarOpen ? "w-5 h-5 mr-3" : "w-6 h-6 mx-auto flex items-center justify-center")}>
-              {isSyncing ? (
-                <RefreshCw className="w-5 h-5 text-blue-500 animate-spin" />
-              ) : syncError ? (
-                <CloudOff className="w-5 h-5 text-rose-500" />
-              ) : githubToken ? (
-                <Cloud className="w-5 h-5 text-emerald-500" />
-              ) : (
-                <CloudOff className="w-5 h-5 text-slate-400" />
-              )}
-            </div>
-            
-            {sidebarOpen && (
-              <span className={clsx(
-                "font-medium whitespace-nowrap text-sm",
-                isSyncing ? "text-blue-500" :
-                syncError ? "text-rose-500" :
-                githubToken ? "text-emerald-600 dark:text-emerald-400" :
-                "text-slate-500 dark:text-slate-400"
-              )}>
-                {isSyncing ? '正在同步...' : syncError ? '同步失败' : githubToken ? '云端已同步' : '未开启同步'}
-              </span>
-            )}
-          </div>
-
-          <div className="h-px bg-slate-200/50 dark:bg-white/5 my-2" />
-
-          <button
-            onClick={toggleSidebar}
-            className="flex items-center w-full p-3 rounded-2xl text-slate-500 hover:bg-slate-100/50 dark:text-slate-400 dark:hover:bg-white/5 transition-all group"
-            title={sidebarOpen ? "收起侧边栏" : "展开侧边栏"}
-          >
-            <div className={clsx("shrink-0 relative z-10", sidebarOpen ? "w-5 h-5 mr-3" : "w-6 h-6 mx-auto flex items-center justify-center")}>
-              {sidebarOpen ? (
-                <PanelLeftClose className="w-5 h-5 group-hover:text-slate-900 dark:group-hover:text-slate-200 transition-colors" />
-              ) : (
-                <PanelLeft className="w-5 h-5 group-hover:text-slate-900 dark:group-hover:text-slate-200 transition-colors" />
-              )}
-            </div>
-            {sidebarOpen && <span className="font-medium whitespace-nowrap">收起导航栏</span>}
-          </button>
-
-          <button
-            onClick={toggleTheme}
-            className="flex items-center w-full p-3 rounded-2xl text-slate-500 hover:bg-slate-100/50 dark:text-slate-400 dark:hover:bg-white/5 transition-all group"
-            title="切换主题"
-          >
-            <div className={clsx("shrink-0 relative z-10", sidebarOpen ? "w-5 h-5 mr-3" : "w-6 h-6 mx-auto flex items-center justify-center")}>
+            >
               {theme === 'dark' ? (
-                <Sun className="w-5 h-5 group-hover:text-amber-400 transition-colors" />
+                <Sun className={clsx("w-5 h-5 shrink-0 group-hover:scale-110 transition-transform", sidebarOpen && "mr-4")} />
               ) : (
-                <Moon className="w-5 h-5 group-hover:text-blue-500 transition-colors" />
+                <Moon className={clsx("w-5 h-5 shrink-0 group-hover:scale-110 transition-transform", sidebarOpen && "mr-4")} />
+              )}
+              {sidebarOpen && <span>{theme === 'dark' ? '浅色模式' : '深色模式'}</span>}
+            </button>
+            
+            <div className={clsx(
+              "flex items-center px-4 py-3 rounded-[12px] text-sm font-bold bg-slate-50 dark:bg-white/5",
+              !sidebarOpen && "justify-center",
+              isSyncing ? "text-miro-blue" : syncError ? "text-pastel-coral-dark dark:text-pastel-coral-light" : "text-miro-success"
+            )}>
+              {isSyncing ? (
+                <RefreshCw className={clsx("w-5 h-5 shrink-0 animate-spin", sidebarOpen && "mr-4")} />
+              ) : syncError ? (
+                <CloudOff className={clsx("w-5 h-5 shrink-0", sidebarOpen && "mr-4")} />
+              ) : (
+                <Cloud className={clsx("w-5 h-5 shrink-0", sidebarOpen && "mr-4")} />
+              )}
+              {sidebarOpen && (
+                <span className="truncate">
+                  {isSyncing ? '同步中...' : syncError ? '同步失败' : '已同步'}
+                </span>
               )}
             </div>
-            {sidebarOpen && <span className="font-medium whitespace-nowrap">{theme === 'dark' ? '亮色模式' : '深色模式'}</span>}
-          </button>
-        </div>
-      </aside>
+          </div>
+        </motion.aside>
+        )}
+      </AnimatePresence>
 
       {/* Main Content */}
-      <main
-        className={clsx(
-          "flex-1 flex flex-col min-w-0 h-screen overflow-hidden transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] relative z-10",
-          sidebarOpen ? "md:pl-72" : "md:pl-28"
-        )}
-      >
-        <div className="flex-1 overflow-auto px-6 lg:px-10 py-10 w-full">
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4 }}
-            className="w-full h-full"
-          >
-            <Outlet />
-          </motion.div>
+      <main className="flex-1 flex flex-col min-w-0 h-screen overflow-y-auto bg-slate-50 dark:bg-miro-black">
+        <div className="flex-1 max-w-[1400px] w-full mx-auto p-6 md:p-10">
+          <Outlet />
         </div>
       </main>
     </div>
