@@ -15,7 +15,7 @@ import { Question } from '../types';
 import { motion } from 'framer-motion';
 import clsx from 'clsx';
 import { useAppStore } from '../store';
-import { generateQwenAnswer } from '../services/qwen';
+import { generateQwenAnswerStream } from '../services/qwen';
 
 type QuestionFormData = Omit<
   Question,
@@ -103,23 +103,32 @@ export default function QuestionEditor() {
     }
     setIsGeneratingAi(true);
     try {
-      const generated = await generateQwenAnswer({
-        apiKey: qwenApiKey,
-        baseUrl: qwenBaseUrl,
-        model: qwenModel,
-        messages: [
-          {
-            role: 'system',
-            content:
-              '你是一名资深面试官与工程师。请用中文输出结构化的 Markdown 答案，包含：核心要点、常见追问、示例代码（如适用）、边界与陷阱、总结。答案要精炼但覆盖关键细节。',
-          },
-          {
-            role: 'user',
-            content: `题目标题：${title}\n\n题目描述：\n${contentValue || '(无)'}\n`,
-          },
-        ],
-      });
-      setValue('aiAnswer', generated, { shouldDirty: true });
+      setValue('aiAnswer', '', { shouldDirty: true });
+      setValue('aiAnswerUpdatedAt', 0, { shouldDirty: true });
+
+      let acc = '';
+      await generateQwenAnswerStream(
+        {
+          apiKey: qwenApiKey,
+          baseUrl: qwenBaseUrl,
+          model: qwenModel,
+          messages: [
+            {
+              role: 'system',
+              content:
+                '你是一名资深面试官与工程师。请用中文输出结构化的 Markdown 答案，包含：核心要点、常见追问、示例代码（如适用）、边界与陷阱、总结。答案要精炼但覆盖关键细节。',
+            },
+            {
+              role: 'user',
+              content: `题目标题：${title}\n\n题目描述：\n${contentValue || '(无)'}\n`,
+            },
+          ],
+        },
+        (delta) => {
+          acc += delta;
+          setValue('aiAnswer', acc, { shouldDirty: true });
+        }
+      );
       setValue('aiAnswerUpdatedAt', Date.now(), { shouldDirty: true });
     } catch (e: any) {
       console.error(e);

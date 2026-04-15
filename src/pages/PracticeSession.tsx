@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Question } from '../types';
-import { X, RefreshCcw, Check, XCircle, Sparkles, ChevronLeft, HelpCircle, CheckCircle2, Bot, FileText, Loader2 } from 'lucide-react';
+import { X, RefreshCcw, Check, XCircle, Sparkles, ChevronLeft, HelpCircle, CheckCircle2, Bot, FileText, Loader2, Send, MessageCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { createDeck, Grade } from 'femto-fsrs';
 import ReactMarkdown from 'react-markdown';
@@ -14,7 +14,7 @@ import hljs from 'highlight.js';
 import 'highlight.js/styles/github-dark.css';
 import clsx from 'clsx';
 import { useAppStore } from '../store';
-import { generateQwenAnswer } from '../services/qwen';
+import { generateQwenAnswerStream } from '../services/qwen';
 
 const { newCard, gradeCard } = createDeck();
 
@@ -42,6 +42,10 @@ export default function PracticeSession() {
   const [isFinished, setIsFinished] = useState(false);
   const [activeAnswerTab, setActiveAnswerTab] = useState<'fixed' | 'ai'>('fixed');
   const [isGeneratingAI, setIsGeneratingAI] = useState(false);
+  const [aiDraft, setAiDraft] = useState('');
+  const [aiChatInput, setAiChatInput] = useState('');
+  const [aiChatMessages, setAiChatMessages] = useState<Array<{ role: 'user' | 'assistant'; content: string }>>([]);
+  const [isAskingAI, setIsAskingAI] = useState(false);
   const isInitialized = useRef(false);
 
   const allQuestions = useAppStore(state => state.questions);
@@ -88,9 +92,19 @@ export default function PracticeSession() {
 
   const currentQuestion = questions[currentIndex];
 
+  useEffect(() => {
+    if (!currentQuestion) return;
+    setAiDraft('');
+    setAiChatInput('');
+    setAiChatMessages([]);
+    setIsAskingAI(false);
+    setIsGeneratingAI(false);
+  }, [currentQuestion?.id]);
+
   const handleGenerateAIAnswer = async () => {
     if (!currentQuestion) return;
     if (currentQuestion.aiAnswer) return;
+    if (isGeneratingAI) return;
 
     if (!qwenApiKey) {
       alert('请先在设置中配置 Qwen API Key');
@@ -99,18 +113,26 @@ export default function PracticeSession() {
     }
 
     setIsGeneratingAI(true);
+    setAiDraft('');
     try {
       const prompt = `请作为资深技术面试官，为以下面试题提供专业、准确且结构清晰的解答：\n\n题目：${currentQuestion.title}\n${currentQuestion.content ? `背景描述：${currentQuestion.content}\n` : ''}\n请直接给出答案，无需多余寒暄，使用 Markdown 格式。`;
-      
-      const aiAnswer = await generateQwenAnswer({
-        apiKey: qwenApiKey,
-        baseUrl: qwenBaseUrl,
-        model: qwenModel,
-        messages: [
-          { role: 'system', content: '你是一个资深的技术专家和面试官，擅长用简洁清晰的语言解答技术问题。' },
-          { role: 'user', content: prompt }
-        ]
-      });
+
+      let acc = '';
+      const aiAnswer = await generateQwenAnswerStream(
+        {
+          apiKey: qwenApiKey,
+          baseUrl: qwenBaseUrl,
+          model: qwenModel,
+          messages: [
+            { role: 'system', content: '你是一个资深的技术专家和面试官，擅长用简洁清晰的语言解答技术问题。' },
+            { role: 'user', content: prompt }
+          ]
+        },
+        (delta) => {
+          acc += delta;
+          setAiDraft(acc);
+        }
+      );
 
       const now = Date.now();
       await updateQuestion(currentQuestion.id, {
@@ -125,6 +147,63 @@ export default function PracticeSession() {
       setActiveAnswerTab('fixed');
     } finally {
       setIsGeneratingAI(false);
+    }
+  };
+
+  const handleAskAI = async () => {
+    if (!currentQuestion) return;
+    const question = aiChatInput.trim();
+    if (!question) return;
+    if (isAskingAI) return;
+
+    if (!qwenApiKey) {
+      alert('请先在设置中配置 Qwen API Key');
+      return;
+    }
+
+    const nextTurns = [...aiChatMessages, { role: 'user' as const, content: question }];
+    setAiChatInput('');
+    setAiChatMessages([...nextTurns, { role: 'assistant', content: '' }]);
+    setIsAskingAI(true);
+
+    try {
+      const contextAi = currentQuestion.aiAnswer || aiDraft || '';
+      const system = `你是一个资深的技术面试官与工程师，负责对用户的追问进行解释与补充。\n\n当前题目：${currentQuestion.title}\n\n题目描述：\n${currentQuestion.content || '(无)'}\n\n固定答案：\n${currentQuestion.answer || '(无)'}\n\nAI 参考答案：\n${contextAi || '(无)'}\n\n要求：\n- 优先引用并解释“固定答案/AI 参考答案”中的相关段落\n- 如果用户问的是术语/字段/公式，给出定义、使用场景、注意事项\n- 用中文输出，Markdown 格式，结构清晰、简洁`;
+
+      let acc = '';
+      await generateQwenAnswerStream(
+        {
+          apiKey: qwenApiKey,
+          baseUrl: qwenBaseUrl,
+          model: qwenModel,
+          messages: [
+            { role: 'system', content: system },
+            ...nextTurns.slice(-12).map((m) => ({ role: m.role, content: m.content })),
+          ],
+        },
+        (delta) => {
+          acc += delta;
+          setAiChatMessages((prev) => {
+            if (prev.length === 0) return prev;
+            const next = [...prev];
+            const last = next[next.length - 1];
+            if (last.role !== 'assistant') return prev;
+            next[next.length - 1] = { ...last, content: last.content + delta };
+            return next;
+          });
+        }
+      );
+    } catch (e: any) {
+      setAiChatMessages((prev) => {
+        if (prev.length === 0) return prev;
+        const next = [...prev];
+        const last = next[next.length - 1];
+        if (last.role !== 'assistant') return prev;
+        next[next.length - 1] = { ...last, content: `生成失败：${e?.message || '请检查网络与 Qwen 配置'}` };
+        return next;
+      });
+    } finally {
+      setIsAskingAI(false);
     }
   };
 
@@ -377,16 +456,74 @@ export default function PracticeSession() {
                         </ReactMarkdown>
                       ) : (
                         isGeneratingAI ? (
-                          <div className="flex flex-col items-center justify-center py-20 text-miro-slate">
-                            <Loader2 className="w-10 h-10 animate-spin mb-4 text-miro-success" />
-                            <p className="font-bold text-[16px] tracking-widest">AI 正在思考中...</p>
-                          </div>
+                          aiDraft ? (
+                            <div className="relative">
+                              <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeRaw, rehypeKatex]} components={MarkdownComponents}>
+                                {aiDraft}
+                              </ReactMarkdown>
+                              <span className="inline-block w-2 h-5 bg-miro-success align-baseline animate-pulse ml-1 rounded-sm" />
+                            </div>
+                          ) : (
+                            <div className="flex flex-col items-center justify-center py-20 text-miro-slate">
+                              <Loader2 className="w-10 h-10 animate-spin mb-4 text-miro-success" />
+                              <p className="font-bold text-[16px] tracking-widest">AI 正在思考中...</p>
+                            </div>
+                          )
                         ) : (
                           <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeRaw, rehypeKatex]} components={MarkdownComponents}>
                             {currentQuestion.aiAnswer || '*AI 暂无答案*'}
                           </ReactMarkdown>
                         )
                       )}
+                    </div>
+
+                    <div className="not-prose mt-10 rounded-[20px] border border-miro-border/40 dark:border-white/10 bg-white/70 dark:bg-black/20 backdrop-blur-xl shadow-sm p-6">
+                      <div className="flex items-center gap-2 mb-4">
+                        <MessageCircle className="w-5 h-5 text-miro-blue" />
+                        <div className="font-display font-bold text-[16px] text-miro-black dark:text-white">向 AI 提问</div>
+                      </div>
+
+                      {aiChatMessages.length > 0 && (
+                        <div className="max-h-[280px] overflow-auto pr-2 custom-scrollbar space-y-3">
+                          {aiChatMessages.map((m, idx) => (
+                            <div
+                              key={`${idx}-${m.role}`}
+                              className={clsx(
+                                "rounded-[14px] px-4 py-3 border text-[14px] leading-relaxed",
+                                m.role === 'user'
+                                  ? "bg-miro-blue/10 border-miro-blue/20 text-miro-black dark:text-slate-200 ml-10"
+                                  : "bg-slate-100/70 dark:bg-white/5 border-miro-border/40 dark:border-white/10 text-miro-black dark:text-slate-200 mr-10"
+                              )}
+                            >
+                              {m.role === 'assistant' ? (
+                                <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeRaw, rehypeKatex]} components={MarkdownComponents}>
+                                  {m.content || (isAskingAI && idx === aiChatMessages.length - 1 ? 'AI 正在回答中...' : '')}
+                                </ReactMarkdown>
+                              ) : (
+                                <div className="whitespace-pre-wrap">{m.content}</div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      <div className="mt-4 flex gap-3 items-end">
+                        <textarea
+                          value={aiChatInput}
+                          onChange={(e) => setAiChatInput(e.target.value)}
+                          rows={2}
+                          placeholder={qwenApiKey ? '例如：请解释一下答案里的某个概念/字段含义...' : '请先在设置中配置 Qwen API Key'}
+                          className="flex-1 px-4 py-3 rounded-[14px] border border-miro-border/40 dark:border-white/10 bg-white dark:bg-[#111] text-miro-black dark:text-white outline-none focus:ring-2 focus:ring-miro-blue/30 resize-none text-[14px]"
+                        />
+                        <button
+                          onClick={handleAskAI}
+                          disabled={!qwenApiKey || isAskingAI || !aiChatInput.trim()}
+                          className="shrink-0 inline-flex items-center justify-center w-12 h-12 rounded-[14px] bg-miro-blue text-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-miro-bluePressed transition-colors shadow-sm"
+                          title="发送"
+                        >
+                          {isAskingAI ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}
+                        </button>
+                      </div>
                     </div>
                   </div>
                 )}
