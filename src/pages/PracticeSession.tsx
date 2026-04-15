@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Question } from '../types';
-import { X, RefreshCcw, Check, XCircle, Sparkles, ChevronLeft, HelpCircle, CheckCircle2, Bot, FileText, Loader2, Send, MessageCircle } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { X, RefreshCcw, Check, XCircle, Sparkles, ChevronLeft, HelpCircle, CheckCircle2, Bot, FileText, Loader2, Send, MessageCircle, GripHorizontal } from 'lucide-react';
+import { motion, AnimatePresence, useDragControls } from 'framer-motion';
 import { createDeck, Grade } from 'femto-fsrs';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -48,6 +48,8 @@ export default function PracticeSession() {
   const [isAskingAI, setIsAskingAI] = useState(false);
   const [aiChatOpen, setAiChatOpen] = useState(false);
   const isInitialized = useRef(false);
+  const chatConstraintsRef = useRef<HTMLDivElement | null>(null);
+  const chatDragControls = useDragControls();
 
   const allQuestions = useAppStore(state => state.questions);
   const updateQuestion = useAppStore(state => state.updateQuestion);
@@ -374,7 +376,7 @@ export default function PracticeSession() {
               isFlipped 
                 ? "bg-pastel-pink-soft dark:bg-pastel-pink-soft/10 border border-pastel-pink-soft/50 shadow-soft" 
                 : "bg-white dark:bg-[#111] border border-miro-border/40 dark:border-white/10 shadow-soft"
-            )}>
+            )} ref={chatConstraintsRef}>
               <div className="p-8 md:p-12 flex-1 overflow-y-auto custom-scrollbar relative z-10">
                 {!isFlipped ? (
                   <div className="flex flex-col h-full justify-center">
@@ -484,35 +486,34 @@ export default function PracticeSession() {
 
               {isFlipped && (
                 <>
-                  <button
-                    onClick={() => setAiChatOpen(true)}
-                    className={clsx(
-                      "not-prose absolute right-6 z-30 inline-flex items-center justify-center w-14 h-14 rounded-[16px] bg-miro-blue text-white shadow-soft transition-colors hover:bg-miro-bluePressed",
-                      aiChatOpen ? "opacity-0 pointer-events-none" : "opacity-100"
-                    )}
-                    style={{ bottom: '7.5rem' }}
-                    title="向 AI 提问"
-                  >
-                    <MessageCircle className="w-6 h-6" />
-                  </button>
-
                   {aiChatOpen && (
-                    <div
-                      className="not-prose absolute right-6 z-40 w-[420px] max-w-[calc(100%-3rem)] rounded-[20px] border border-miro-border/40 dark:border-white/10 bg-white/85 dark:bg-black/40 backdrop-blur-xl shadow-soft overflow-hidden flex flex-col"
+                    <motion.div
+                      drag
+                      dragControls={chatDragControls}
+                      dragListener={false}
+                      dragConstraints={chatConstraintsRef}
+                      dragMomentum={false}
+                      className="not-prose absolute inset-x-6 z-40 rounded-[20px] border border-miro-border/40 dark:border-white/10 bg-white/85 dark:bg-black/40 backdrop-blur-xl shadow-soft overflow-hidden flex flex-col"
                       style={{ bottom: '7.5rem', height: '520px', maxHeight: 'calc(100% - 9rem)' }}
                     >
-                      <div className="flex items-center justify-between px-5 py-4 border-b border-miro-border/40 dark:border-white/10">
+                      <div
+                        className="flex items-center justify-between px-5 py-4 border-b border-miro-border/40 dark:border-white/10 cursor-move select-none"
+                        onPointerDown={(e) => chatDragControls.start(e)}
+                      >
                         <div className="flex items-center gap-2">
                           <MessageCircle className="w-5 h-5 text-miro-blue" />
                           <div className="font-display font-bold text-[15px] text-miro-black dark:text-white">向 AI 提问</div>
                         </div>
-                        <button
-                          onClick={() => setAiChatOpen(false)}
-                          className="w-9 h-9 inline-flex items-center justify-center rounded-[12px] hover:bg-slate-100 dark:hover:bg-white/5 text-miro-slate dark:text-slate-300 transition-colors"
-                          title="收起"
-                        >
-                          <X className="w-5 h-5" />
-                        </button>
+                        <div className="flex items-center gap-2">
+                          <GripHorizontal className="w-5 h-5 text-miro-slate/70 dark:text-slate-400" />
+                          <button
+                            onClick={() => setAiChatOpen(false)}
+                            className="w-9 h-9 inline-flex items-center justify-center rounded-[12px] hover:bg-slate-100 dark:hover:bg-white/5 text-miro-slate dark:text-slate-300 transition-colors"
+                            title="收起"
+                          >
+                            <X className="w-5 h-5" />
+                          </button>
+                        </div>
                       </div>
 
                       <div className="flex-1 min-h-0 overflow-auto p-4 custom-scrollbar space-y-3">
@@ -568,7 +569,7 @@ export default function PracticeSession() {
                           </button>
                         </div>
                       </div>
-                    </div>
+                    </motion.div>
                   )}
                 </>
               )}
@@ -585,7 +586,7 @@ export default function PracticeSession() {
               ) : (
                 <div className="p-6 bg-white/50 dark:bg-black/20 border-t border-miro-border/20 dark:border-white/10 relative z-10">
                   <p className="text-center text-[14px] font-bold text-miro-slate dark:text-slate-400 mb-4 tracking-widest uppercase">评估掌握程度</p>
-                  <div className="grid grid-cols-3 gap-4 max-w-3xl mx-auto">
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto">
                     <button
                       onClick={() => handleMastery(0)}
                       className="flex flex-col items-center justify-center p-4 bg-white dark:bg-[#111] border border-miro-border/40 dark:border-white/10 rounded-[12px] hover:border-pastel-coral-dark dark:hover:border-pastel-coral-light hover:bg-pastel-red-light/30 transition-all group shadow-sm hover:shadow-soft"
@@ -606,6 +607,18 @@ export default function PracticeSession() {
                     >
                       <CheckCircle2 className="w-8 h-8 text-miro-success mb-3 group-hover:scale-110 transition-transform" />
                       <span className="font-bold text-miro-black dark:text-slate-300 group-hover:text-miro-success">已掌握</span>
+                    </button>
+                    <button
+                      onClick={() => setAiChatOpen(true)}
+                      className={clsx(
+                        "flex flex-col items-center justify-center p-4 bg-white dark:bg-[#111] border border-miro-border/40 dark:border-white/10 rounded-[12px] transition-all group shadow-sm hover:shadow-soft",
+                        aiChatOpen
+                          ? "border-miro-blue/60 bg-miro-blue/5"
+                          : "hover:border-miro-blue/60 hover:bg-miro-blue/5"
+                      )}
+                    >
+                      <MessageCircle className="w-8 h-8 text-miro-blue mb-3 group-hover:scale-110 transition-transform" />
+                      <span className="font-bold text-miro-black dark:text-slate-300 group-hover:text-miro-blue">问 AI</span>
                     </button>
                   </div>
                 </div>
