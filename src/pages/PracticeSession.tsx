@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Question } from '../types';
-import { X, RefreshCcw, Check, XCircle, Sparkles, ChevronLeft, HelpCircle, CheckCircle2 } from 'lucide-react';
+import { X, RefreshCcw, Check, XCircle, Sparkles, ChevronLeft, HelpCircle, CheckCircle2, Bot, FileText, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { createDeck, Grade } from 'femto-fsrs';
 import ReactMarkdown from 'react-markdown';
@@ -14,6 +14,7 @@ import hljs from 'highlight.js';
 import 'highlight.js/styles/github-dark.css';
 import clsx from 'clsx';
 import { useAppStore } from '../store';
+import { generateQwenAnswer } from '../services/qwen';
 
 const { newCard, gradeCard } = createDeck();
 
@@ -39,10 +40,15 @@ export default function PracticeSession() {
   const [isFlipped, setIsFlipped] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isFinished, setIsFinished] = useState(false);
+  const [activeAnswerTab, setActiveAnswerTab] = useState<'fixed' | 'ai'>('fixed');
+  const [isGeneratingAI, setIsGeneratingAI] = useState(false);
   const isInitialized = useRef(false);
 
   const allQuestions = useAppStore(state => state.questions);
   const updateQuestion = useAppStore(state => state.updateQuestion);
+  const qwenApiKey = useAppStore(state => state.qwenApiKey);
+  const qwenBaseUrl = useAppStore(state => state.qwenBaseUrl);
+  const qwenModel = useAppStore(state => state.qwenModel);
 
   useEffect(() => {
     if (isInitialized.current) return;
@@ -82,6 +88,44 @@ export default function PracticeSession() {
 
   const currentQuestion = questions[currentIndex];
 
+  const handleGenerateAIAnswer = async () => {
+    if (!currentQuestion) return;
+    if (currentQuestion.aiAnswer) return; // Already generated
+
+    if (!qwenApiKey) {
+      alert('请先在设置中配置 Qwen API Key');
+      setActiveAnswerTab('fixed');
+      return;
+    }
+
+    setIsGeneratingAI(true);
+    try {
+      const prompt = `请作为资深技术面试官，为以下面试题提供专业、准确且结构清晰的解答：\n\n题目：${currentQuestion.title}\n${currentQuestion.content ? `背景描述：${currentQuestion.content}\n` : ''}\n请直接给出答案，无需多余寒暄，使用 Markdown 格式。`;
+      
+      const aiAnswer = await generateQwenAnswer({
+        apiKey: qwenApiKey,
+        baseUrl: qwenBaseUrl,
+        model: qwenModel,
+        messages: [
+          { role: 'system', content: '你是一个资深的技术专家和面试官，擅长用简洁清晰的语言解答技术问题。' },
+          { role: 'user', content: prompt }
+        ]
+      });
+
+      await updateQuestion(currentQuestion.id, {
+        aiAnswer,
+        updatedAt: Date.now()
+      });
+      
+      setQuestions(prev => prev.map(q => q.id === currentQuestion.id ? { ...q, aiAnswer } : q));
+    } catch (err: any) {
+      alert(`生成 AI 答案失败: ${err.message}`);
+      setActiveAnswerTab('fixed');
+    } finally {
+      setIsGeneratingAI(false);
+    }
+  };
+
   const handleMastery = async (level: 0 | 1 | 2) => {
     if (!currentQuestion) return;
 
@@ -112,6 +156,7 @@ export default function PracticeSession() {
       setHistoryStack(prev => [...prev, currentIndex]);
       const nextQ = questions[currentIndex + 1];
       setIsFlipped(nextQ.reviewCount === 0);
+      setActiveAnswerTab('fixed');
       setCurrentIndex(prev => prev + 1);
     } else {
       setIsFinished(true);
@@ -195,6 +240,7 @@ export default function PracticeSession() {
                   const prevQ = questions[prevIndex];
                   setCurrentIndex(prevIndex);
                   setIsFlipped(prevQ.reviewCount === 0);
+                  setActiveAnswerTab('fixed');
                 }} 
                 className="flex items-center px-4 py-2 text-[14px] font-display font-bold text-miro-black dark:text-white bg-white dark:bg-white/5 border border-miro-border dark:border-white/10 hover:bg-slate-50 dark:hover:bg-white/10 rounded-[8px] transition-colors shrink-0 shadow-sm"
               >
@@ -275,25 +321,71 @@ export default function PracticeSession() {
                     )}
                   </div>
                 ) : (
-                  <div className="prose prose-slate prose-lg dark:prose-invert max-w-none w-full">
-                    <div className="flex items-center gap-3 mb-8 pb-4 border-b border-miro-black/5 dark:border-white/10">
-                      <Sparkles className="w-6 h-6 text-miro-blue" />
-                      <h3 className="text-[24px] font-display font-bold text-miro-black dark:text-white m-0 tracking-[-0.72px]">答案与解析</h3>
+                  <div className="prose prose-slate prose-lg dark:prose-invert max-w-none w-full relative">
+                    <div className="absolute top-0 right-0 flex items-center bg-slate-100 dark:bg-white/5 rounded-[12px] p-1 border border-miro-border/40 dark:border-white/10 shadow-sm z-20">
+                      <button
+                        onClick={() => setActiveAnswerTab('fixed')}
+                        className={clsx(
+                          "px-4 py-2 rounded-[8px] text-[14px] font-bold transition-all flex items-center gap-2 font-display",
+                          activeAnswerTab === 'fixed' 
+                            ? "bg-white dark:bg-[#222] text-miro-blue shadow-sm" 
+                            : "text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
+                        )}
+                      >
+                        <FileText className="w-4 h-4" />
+                        固定答案
+                      </button>
+                      <button
+                        onClick={() => {
+                          setActiveAnswerTab('ai');
+                          if (!currentQuestion.aiAnswer) {
+                            handleGenerateAIAnswer();
+                          }
+                        }}
+                        className={clsx(
+                          "px-4 py-2 rounded-[8px] text-[14px] font-bold transition-all flex items-center gap-2 font-display",
+                          activeAnswerTab === 'ai' 
+                            ? "bg-white dark:bg-[#222] text-miro-success shadow-sm" 
+                            : "text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
+                        )}
+                      >
+                        <Bot className="w-4 h-4" />
+                        AI 解析
+                      </button>
                     </div>
-                    <div className="text-miro-black/80 dark:text-slate-300 font-sans text-[18px]">
-                      <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeRaw, rehypeKatex]} components={MarkdownComponents}>{currentQuestion.answer || '*未提供固定答案*'}</ReactMarkdown>
-                    </div>
-                    {currentQuestion.aiAnswer && currentQuestion.aiAnswer.trim().length > 0 && (
-                      <div className="mt-10">
-                        <div className="flex items-center gap-3 mb-6 pb-4 border-b border-miro-black/5 dark:border-white/10">
+
+                    <div className="flex items-center gap-3 mb-8 pb-4 border-b border-miro-black/5 dark:border-white/10 pr-[240px]">
+                      {activeAnswerTab === 'fixed' ? (
+                        <>
+                          <Sparkles className="w-6 h-6 text-miro-blue" />
+                          <h3 className="text-[24px] font-display font-bold text-miro-black dark:text-white m-0 tracking-[-0.72px]">答案与解析</h3>
+                        </>
+                      ) : (
+                        <>
                           <Sparkles className="w-6 h-6 text-miro-success" />
                           <h3 className="text-[24px] font-display font-bold text-miro-black dark:text-white m-0 tracking-[-0.72px]">AI 参考答案</h3>
-                        </div>
-                        <div className="text-miro-black/80 dark:text-slate-300 font-sans text-[18px]">
-                          <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeRaw, rehypeKatex]} components={MarkdownComponents}>{currentQuestion.aiAnswer}</ReactMarkdown>
-                        </div>
-                      </div>
-                    )}
+                        </>
+                      )}
+                    </div>
+                    
+                    <div className="text-miro-black/80 dark:text-slate-300 font-sans text-[18px]">
+                      {activeAnswerTab === 'fixed' ? (
+                        <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeRaw, rehypeKatex]} components={MarkdownComponents}>
+                          {currentQuestion.answer || '*未提供固定答案*'}
+                        </ReactMarkdown>
+                      ) : (
+                        isGeneratingAI ? (
+                          <div className="flex flex-col items-center justify-center py-20 text-miro-slate">
+                            <Loader2 className="w-10 h-10 animate-spin mb-4 text-miro-success" />
+                            <p className="font-bold text-[16px] tracking-widest">AI 正在思考中...</p>
+                          </div>
+                        ) : (
+                          <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeRaw, rehypeKatex]} components={MarkdownComponents}>
+                            {currentQuestion.aiAnswer || '*AI 暂无答案*'}
+                          </ReactMarkdown>
+                        )
+                      )}
+                    </div>
                   </div>
                 )}
               </div>
