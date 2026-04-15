@@ -25,20 +25,19 @@ export default function Layout() {
       >
         <div className="flex items-center justify-between h-20 px-6 border-b border-slate-200/50 dark:border-white/5 relative">
           <div className="flex items-center gap-3">
-            <span className="w-10 h-10 shrink-0 rounded-xl bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center text-white shadow-lg shadow-emerald-500/20 mx-auto overflow-hidden">
-              <img src="/src/assets/nm.svg" alt="fkcoding" className="w-6 h-6 object-contain" />
-            </span>
             <AnimatePresence>
-              {sidebarOpen && (
-                <motion.span 
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -10 }}
-                  className="text-xl font-display font-bold text-slate-900 dark:text-white whitespace-nowrap"
-                >
-                  fkcoding
-                </motion.span>
-              )}
+              <motion.span
+                key={sidebarOpen ? 'brand-full' : 'brand-mini'}
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -10 }}
+                className={clsx(
+                  "text-xl font-display font-bold text-slate-900 dark:text-white whitespace-nowrap",
+                  !sidebarOpen && "mx-auto"
+                )}
+              >
+                {sidebarOpen ? 'fkcoding' : 'fk'}
+              </motion.span>
             </AnimatePresence>
           </div>
         </div>

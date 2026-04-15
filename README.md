@@ -1,4 +1,4 @@
-# fkcoding (Interview Pro) - 轻量级云端沉浸式刷题系统
+# fkcoding - 轻量级云端沉浸式刷题系统
 
 基于 React 18、Vite、TypeScript、Tailwind CSS 和 Zustand 构建的轻量级面试题管理与刷题平台。它利用 **纯内存运行 + GitHub Gist 私有云同步** 作为数据存储方案，摆脱了对浏览器缓存（IndexedDB）的依赖，既保证了极快的响应速度，又解决了清缓存/换设备导致数据丢失的痛点。您可以将它一键部署到 GitHub Pages 等任意静态托管平台。
 
@@ -64,9 +64,9 @@ pnpm run dev
 - **动画**：Framer Motion
 - **状态管理**：Zustand (内存状态 + GitHub Gist 数据持久化)
 - **图标**：Lucide React
-- **Markdown**：react-markdown, remark-gfm, highlight.js
+- **Markdown**：react-markdown, remark-gfm, remark-math, rehype-raw, rehype-katex, katex, highlight.js
 - **Excel/CSV 解析**：xlsx
 
 ---
 
-*Made with ❤️ by Interview Pro Team*
+*Made with ❤️ by fkcoding Team*
