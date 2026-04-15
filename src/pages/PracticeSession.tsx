@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Question } from '../types';
-import { X, RefreshCcw, Check, XCircle, Sparkles, ChevronLeft, HelpCircle, CheckCircle2, Bot, FileText, Loader2, Send, MessageCircle, GripHorizontal } from 'lucide-react';
-import { motion, AnimatePresence, useDragControls } from 'framer-motion';
+import { X, RefreshCcw, Check, XCircle, Sparkles, ChevronLeft, HelpCircle, CheckCircle2, Bot, FileText, Loader2, Send, MessageCircle } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { createDeck, Grade } from 'femto-fsrs';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -48,8 +48,6 @@ export default function PracticeSession() {
   const [isAskingAI, setIsAskingAI] = useState(false);
   const [aiChatOpen, setAiChatOpen] = useState(false);
   const isInitialized = useRef(false);
-  const chatConstraintsRef = useRef<HTMLDivElement | null>(null);
-  const chatDragControls = useDragControls();
 
   const allQuestions = useAppStore(state => state.questions);
   const updateQuestion = useAppStore(state => state.updateQuestion);
@@ -311,7 +309,12 @@ export default function PracticeSession() {
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-miro-black flex flex-col overflow-hidden font-sans">
       {/* Header */}
-      <header className="h-20 flex flex-col justify-center px-4 md:px-8 border-b border-miro-border/40 dark:border-white/10 bg-white/80 dark:bg-miro-black/80 backdrop-blur-xl z-20 w-full max-w-[1400px] mx-auto">
+      <header
+        className={clsx(
+          "h-20 flex flex-col justify-center border-b border-miro-border/40 dark:border-white/10 bg-white/80 dark:bg-miro-black/80 backdrop-blur-xl z-20 w-full mx-auto",
+          isFlipped ? "max-w-[1600px] px-2 md:px-4" : "max-w-[1400px] px-4 md:px-8"
+        )}
+      >
         <div className="flex items-center justify-between w-full mb-3 mt-2 gap-4">
           <div className="flex items-center gap-2 shrink-0">
             <button onClick={() => navigate('/practice')} className="p-2 text-miro-slate hover:bg-slate-100 dark:hover:bg-white/5 rounded-[8px] transition-colors" title="退出练习">
@@ -352,7 +355,7 @@ export default function PracticeSession() {
         </div>
         
         {/* Progress Bar Container */}
-        <div className="w-full h-1.5 bg-slate-200 dark:bg-white/10 rounded-full overflow-hidden shrink-0">
+        <div className="w-full h-2 bg-slate-200 dark:bg-white/10 rounded-full overflow-hidden shrink-0">
           <div 
             className="h-full bg-miro-blue transition-all duration-500 ease-out"
             style={{ width: `${((currentIndex + 1) / questions.length) * 100}%` }}
@@ -361,7 +364,12 @@ export default function PracticeSession() {
       </header>
 
       {/* Main Flashcard Area */}
-      <main className="flex-1 relative overflow-hidden z-10 w-full max-w-[1400px] mx-auto p-4 md:p-6">
+      <main
+        className={clsx(
+          "flex-1 relative overflow-hidden z-10 w-full mx-auto",
+          isFlipped ? "max-w-[1600px] p-2 md:p-4" : "max-w-[1400px] p-4 md:p-6"
+        )}
+      >
         <AnimatePresence mode="wait">
           <motion.div
             key={currentQuestion.id + (isFlipped ? '-back' : '-front')}
@@ -369,16 +377,11 @@ export default function PracticeSession() {
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 1.02, y: -10 }}
             transition={{ duration: 0.3, ease: [0.23, 1, 0.32, 1] }}
-            className="absolute inset-4 md:inset-6 flex flex-col"
+            className={clsx("absolute flex flex-col", isFlipped ? "inset-0" : "inset-4 md:inset-6")}
           >
-            <div className={clsx(
-              "w-full h-full rounded-[24px] flex flex-col overflow-hidden relative transition-colors duration-500",
-              isFlipped 
-                ? "bg-pastel-pink-soft dark:bg-pastel-pink-soft/10 border border-pastel-pink-soft/50 shadow-soft" 
-                : "bg-white dark:bg-[#111] border border-miro-border/40 dark:border-white/10 shadow-soft"
-            )} ref={chatConstraintsRef}>
-              <div className="p-8 md:p-12 flex-1 overflow-y-auto custom-scrollbar relative z-10">
-                {!isFlipped ? (
+            {!isFlipped ? (
+              <div className="w-full h-full rounded-[24px] flex flex-col overflow-hidden relative transition-colors duration-500 bg-white dark:bg-[#111] border border-miro-border/40 dark:border-white/10 shadow-soft">
+                <div className="p-8 md:p-12 flex-1 overflow-y-auto custom-scrollbar relative z-10">
                   <div className="flex flex-col h-full justify-center">
                     <div className="flex gap-2 mb-8 justify-center">
                       <span className={clsx("px-4 py-1.5 rounded-[8px] text-[12px] font-bold uppercase tracking-wider border", 
@@ -394,158 +397,161 @@ export default function PracticeSession() {
                         </span>
                       ))}
                     </div>
-                    {!isFlipped && (
-                      <h2 className="text-[32px] md:text-[40px] font-display font-bold text-center text-miro-black dark:text-white mb-8 leading-tight tracking-[-0.72px]">
-                        {currentQuestion.title}
-                      </h2>
-                    )}
+                    <h2 className="text-[32px] md:text-[40px] font-display font-bold text-center text-miro-black dark:text-white mb-8 leading-tight tracking-[-0.72px]">
+                      {currentQuestion.title}
+                    </h2>
                     {currentQuestion.content && (
                       <div className="prose prose-slate prose-lg dark:prose-invert max-w-none mx-auto text-center text-miro-slate dark:text-slate-400 mt-4">
                         <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeRaw, rehypeKatex]} components={MarkdownComponents}>{currentQuestion.content}</ReactMarkdown>
                       </div>
                     )}
                   </div>
-                ) : (
-                  <div className="prose prose-slate prose-lg dark:prose-invert max-w-none w-full relative">
-                    <div className="absolute top-0 right-0 flex items-center bg-slate-100 dark:bg-white/5 rounded-[12px] p-1 border border-miro-border/40 dark:border-white/10 shadow-sm z-20">
-                      <button
-                        onClick={() => setActiveAnswerTab('fixed')}
-                        className={clsx(
-                          "px-4 py-2 rounded-[8px] text-[14px] font-bold transition-all flex items-center gap-2 font-display",
-                          activeAnswerTab === 'fixed' 
-                            ? "bg-white dark:bg-[#222] text-miro-blue shadow-sm" 
-                            : "text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
-                        )}
-                      >
-                        <FileText className="w-4 h-4" />
-                        固定答案
-                      </button>
-                      <button
-                        onClick={() => {
-                          setActiveAnswerTab('ai');
-                          if (!currentQuestion.aiAnswer) {
-                            handleGenerateAIAnswer();
-                          }
-                        }}
-                        className={clsx(
-                          "px-4 py-2 rounded-[8px] text-[14px] font-bold transition-all flex items-center gap-2 font-display",
-                          activeAnswerTab === 'ai' 
-                            ? "bg-white dark:bg-[#222] text-miro-success shadow-sm" 
-                            : "text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
-                        )}
-                      >
-                        <Bot className="w-4 h-4" />
-                        AI 解析
-                      </button>
-                    </div>
-
-                    <div className="flex items-center gap-3 mb-8 pb-4 border-b border-miro-black/5 dark:border-white/10 pr-[240px]">
-                      {activeAnswerTab === 'fixed' ? (
-                        <>
-                          <Sparkles className="w-6 h-6 text-miro-blue" />
-                          <h3 className="text-[24px] font-display font-bold text-miro-black dark:text-white m-0 tracking-[-0.72px]">答案与解析</h3>
-                        </>
-                      ) : (
-                        <>
-                          <Sparkles className="w-6 h-6 text-miro-success" />
-                          <h3 className="text-[24px] font-display font-bold text-miro-black dark:text-white m-0 tracking-[-0.72px]">AI 参考答案</h3>
-                        </>
-                      )}
-                    </div>
-                    
-                    <div className="text-miro-black/80 dark:text-slate-300 font-sans text-[18px]">
-                      {activeAnswerTab === 'fixed' ? (
-                        <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeRaw, rehypeKatex]} components={MarkdownComponents}>
-                          {currentQuestion.answer || '*未提供固定答案*'}
-                        </ReactMarkdown>
-                      ) : (
-                        isGeneratingAI ? (
-                          aiDraft ? (
-                            <div className="relative">
-                              <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeRaw, rehypeKatex]} components={MarkdownComponents}>
-                                {aiDraft}
-                              </ReactMarkdown>
-                              <span className="inline-block w-2 h-5 bg-miro-success align-baseline animate-pulse ml-1 rounded-sm" />
-                            </div>
-                          ) : (
-                            <div className="flex flex-col items-center justify-center py-20 text-miro-slate">
-                              <Loader2 className="w-10 h-10 animate-spin mb-4 text-miro-success" />
-                              <p className="font-bold text-[16px] tracking-widest">AI 正在思考中...</p>
-                            </div>
-                          )
-                        ) : (
-                          <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeRaw, rehypeKatex]} components={MarkdownComponents}>
-                            {currentQuestion.aiAnswer || '*AI 暂无答案*'}
-                          </ReactMarkdown>
-                        )
-                      )}
-                    </div>
-                  </div>
-                )}
+                </div>
+                <div className="p-6 bg-slate-50/50 dark:bg-black/20 border-t border-miro-border/40 dark:border-white/10 relative z-10 flex justify-center">
+                  <button
+                    onClick={() => setIsFlipped(true)}
+                    className="w-full md:w-auto min-w-[200px] px-8 py-4 bg-miro-blue text-white rounded-[8px] font-display font-bold text-[17.5px] hover:bg-miro-bluePressed transition-colors shadow-soft"
+                  >
+                    查看答案
+                  </button>
+                </div>
               </div>
-
-              {isFlipped && (
-                <>
-                  {aiChatOpen && (
-                    <motion.div
-                      drag
-                      dragControls={chatDragControls}
-                      dragListener={false}
-                      dragConstraints={chatConstraintsRef}
-                      dragMomentum={false}
-                      className="not-prose absolute inset-x-6 z-40 rounded-[20px] border border-miro-border/40 dark:border-white/10 bg-white/85 dark:bg-black/40 backdrop-blur-xl shadow-soft overflow-hidden flex flex-col"
-                      style={{ bottom: '7.5rem', height: '520px', maxHeight: 'calc(100% - 9rem)' }}
-                    >
-                      <div
-                        className="flex items-center justify-between px-5 py-4 border-b border-miro-border/40 dark:border-white/10 cursor-move select-none"
-                        onPointerDown={(e) => chatDragControls.start(e)}
-                      >
-                        <div className="flex items-center gap-2">
-                          <MessageCircle className="w-5 h-5 text-miro-blue" />
-                          <div className="font-display font-bold text-[15px] text-miro-black dark:text-white">向 AI 提问</div>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <GripHorizontal className="w-5 h-5 text-miro-slate/70 dark:text-slate-400" />
+            ) : (
+              <div className="w-full h-full grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_320px] gap-4 md:gap-6">
+                <div className="relative w-full h-full">
+                  <div className="w-full h-full rounded-[24px] flex flex-col overflow-hidden relative transition-colors duration-500 bg-pastel-pink-soft dark:bg-pastel-pink-soft/10 border border-pastel-pink-soft/50 shadow-soft">
+                    <div className="p-8 md:p-12 flex-1 overflow-y-auto custom-scrollbar relative z-10">
+                      <div className="prose prose-slate prose-lg dark:prose-invert max-w-none w-full relative">
+                        <div className="absolute top-0 right-0 flex items-center bg-slate-100 dark:bg-white/5 rounded-[12px] p-1 border border-miro-border/40 dark:border-white/10 shadow-sm z-20">
                           <button
-                            onClick={() => setAiChatOpen(false)}
-                            className="w-9 h-9 inline-flex items-center justify-center rounded-[12px] hover:bg-slate-100 dark:hover:bg-white/5 text-miro-slate dark:text-slate-300 transition-colors"
-                            title="收起"
+                            onClick={() => setActiveAnswerTab('fixed')}
+                            className={clsx(
+                              "px-4 py-2 rounded-[8px] text-[14px] font-bold transition-all flex items-center gap-2 font-display",
+                              activeAnswerTab === 'fixed' 
+                                ? "bg-white dark:bg-[#222] text-miro-blue shadow-sm" 
+                                : "text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
+                            )}
                           >
-                            <X className="w-5 h-5" />
+                            <FileText className="w-4 h-4" />
+                            固定答案
+                          </button>
+                          <button
+                            onClick={() => {
+                              setActiveAnswerTab('ai');
+                              if (!currentQuestion.aiAnswer) {
+                                handleGenerateAIAnswer();
+                              }
+                            }}
+                            className={clsx(
+                              "px-4 py-2 rounded-[8px] text-[14px] font-bold transition-all flex items-center gap-2 font-display",
+                              activeAnswerTab === 'ai' 
+                                ? "bg-white dark:bg-[#222] text-miro-success shadow-sm" 
+                                : "text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
+                            )}
+                          >
+                            <Bot className="w-4 h-4" />
+                            AI 解析
                           </button>
                         </div>
+
+                        <div className="flex items-center gap-3 mb-8 pb-4 border-b border-miro-black/5 dark:border-white/10 pr-[240px]">
+                          {activeAnswerTab === 'fixed' ? (
+                            <>
+                              <Sparkles className="w-6 h-6 text-miro-blue" />
+                              <h3 className="text-[24px] font-display font-bold text-miro-black dark:text-white m-0 tracking-[-0.72px]">答案与解析</h3>
+                            </>
+                          ) : (
+                            <>
+                              <Sparkles className="w-6 h-6 text-miro-success" />
+                              <h3 className="text-[24px] font-display font-bold text-miro-black dark:text-white m-0 tracking-[-0.72px]">AI 参考答案</h3>
+                            </>
+                          )}
+                        </div>
+                        
+                        <div className="text-miro-black/80 dark:text-slate-300 font-sans text-[18px]">
+                          {activeAnswerTab === 'fixed' ? (
+                            <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeRaw, rehypeKatex]} components={MarkdownComponents}>
+                              {currentQuestion.answer || '*未提供固定答案*'}
+                            </ReactMarkdown>
+                          ) : (
+                            isGeneratingAI ? (
+                              aiDraft ? (
+                                <div className="relative">
+                                  <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeRaw, rehypeKatex]} components={MarkdownComponents}>
+                                    {aiDraft}
+                                  </ReactMarkdown>
+                                  <span className="inline-block w-2 h-5 bg-miro-success align-baseline animate-pulse ml-1 rounded-sm" />
+                                </div>
+                              ) : (
+                                <div className="flex flex-col items-center justify-center py-20 text-miro-slate">
+                                  <Loader2 className="w-10 h-10 animate-spin mb-4 text-miro-success" />
+                                  <p className="font-bold text-[16px] tracking-widest">AI 正在思考中...</p>
+                                </div>
+                              )
+                            ) : (
+                              <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeRaw, rehypeKatex]} components={MarkdownComponents}>
+                                {currentQuestion.aiAnswer || '*AI 暂无答案*'}
+                              </ReactMarkdown>
+                            )
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {aiChatOpen && (
+                    <div className="not-prose absolute inset-0 z-40 rounded-[24px] overflow-hidden border border-miro-border/40 dark:border-white/10 bg-white/95 dark:bg-[#0a0a0a]/90 backdrop-blur-xl shadow-soft flex flex-col">
+                      <div className="flex items-center justify-between px-6 py-5 border-b border-miro-border/40 dark:border-white/10">
+                        <div className="flex items-center gap-2">
+                          <MessageCircle className="w-5 h-5 text-miro-blue" />
+                          <div className="font-display font-bold text-[16px] text-miro-black dark:text-white">向 AI 提问</div>
+                        </div>
+                        <button
+                          onClick={() => setAiChatOpen(false)}
+                          className="w-10 h-10 inline-flex items-center justify-center rounded-[12px] hover:bg-slate-100 dark:hover:bg-white/5 text-miro-slate dark:text-slate-300 transition-colors"
+                          title="关闭"
+                        >
+                          <X className="w-5 h-5" />
+                        </button>
                       </div>
 
-                      <div className="flex-1 min-h-0 overflow-auto p-4 custom-scrollbar space-y-3">
+                      <div className="flex-1 min-h-0 overflow-auto p-6 custom-scrollbar space-y-5">
                         {aiChatMessages.length === 0 ? (
-                          <div className="text-[13px] text-miro-slate dark:text-slate-400 leading-relaxed">
-                            你可以追问答案中的概念、字段含义、边界情况、对比方案等。
+                          <div className="rounded-[16px] border border-miro-border/40 dark:border-white/10 bg-slate-50/70 dark:bg-white/5 p-5 text-[14px] text-miro-slate dark:text-slate-300 leading-relaxed">
+                            你可以追问答案中的概念、字段含义、边界情况、对比方案等。AI 会结合当前题目与答案给出结构化解释。
                           </div>
                         ) : (
                           aiChatMessages.map((m, idx) => (
                             <div
                               key={`${idx}-${m.role}`}
                               className={clsx(
-                                "rounded-[14px] px-4 py-3 border text-[13px] leading-relaxed",
+                                "rounded-[18px] border overflow-hidden",
                                 m.role === 'user'
-                                  ? "bg-miro-blue/10 border-miro-blue/20 text-miro-black dark:text-slate-200 ml-10"
-                                  : "bg-slate-100/70 dark:bg-white/5 border-miro-border/40 dark:border-white/10 text-miro-black dark:text-slate-200 mr-10"
+                                  ? "bg-miro-blue/10 border-miro-blue/20"
+                                  : "bg-white/70 dark:bg-white/5 border-miro-border/40 dark:border-white/10"
                               )}
                             >
-                              {m.role === 'assistant' ? (
-                                <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeRaw, rehypeKatex]} components={MarkdownComponents}>
-                                  {m.content || (isAskingAI && idx === aiChatMessages.length - 1 ? 'AI 正在回答中...' : '')}
-                                </ReactMarkdown>
-                              ) : (
-                                <div className="whitespace-pre-wrap">{m.content}</div>
-                              )}
+                              <div className={clsx("px-5 py-3 text-[12px] font-bold tracking-widest uppercase border-b", m.role === 'user' ? "text-miro-blue border-miro-blue/20" : "text-miro-slate dark:text-slate-400 border-miro-border/30 dark:border-white/10")}>
+                                {m.role === 'user' ? '问题' : '回答'}
+                              </div>
+                              <div className="p-5 text-[15px] text-miro-black dark:text-slate-200">
+                                {m.role === 'assistant' ? (
+                                  <div className="prose prose-slate dark:prose-invert max-w-none prose-lg">
+                                    <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeRaw, rehypeKatex]} components={MarkdownComponents}>
+                                      {m.content || (isAskingAI && idx === aiChatMessages.length - 1 ? 'AI 正在回答中...' : '')}
+                                    </ReactMarkdown>
+                                  </div>
+                                ) : (
+                                  <div className="whitespace-pre-wrap leading-relaxed">{m.content}</div>
+                                )}
+                              </div>
                             </div>
                           ))
                         )}
                       </div>
 
-                      <div className="p-4 border-t border-miro-border/40 dark:border-white/10">
-                        <div className="flex gap-3 items-end">
+                      <div className="p-6 border-t border-miro-border/40 dark:border-white/10 bg-white/70 dark:bg-black/30">
+                        <div className="flex gap-4 items-end">
                           <textarea
                             value={aiChatInput}
                             onChange={(e) => setAiChatInput(e.target.value)}
@@ -557,73 +563,59 @@ export default function PracticeSession() {
                             }}
                             rows={2}
                             placeholder={qwenApiKey ? '输入问题，Enter 发送，Shift+Enter 换行' : '请先在设置中配置 Qwen API Key'}
-                            className="flex-1 px-4 py-3 rounded-[14px] border border-miro-border/40 dark:border-white/10 bg-white dark:bg-[#111] text-miro-black dark:text-white outline-none focus:ring-2 focus:ring-miro-blue/30 resize-none text-[13px]"
+                            className="flex-1 px-5 py-4 rounded-[16px] border border-miro-border/40 dark:border-white/10 bg-white dark:bg-[#111] text-miro-black dark:text-white outline-none focus:ring-2 focus:ring-miro-blue/30 resize-none text-[14px]"
                           />
                           <button
                             onClick={handleAskAI}
                             disabled={!qwenApiKey || isAskingAI || !aiChatInput.trim()}
-                            className="shrink-0 inline-flex items-center justify-center w-12 h-12 rounded-[14px] bg-miro-blue text-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-miro-bluePressed transition-colors shadow-sm"
+                            className="shrink-0 inline-flex items-center justify-center w-14 h-14 rounded-[16px] bg-miro-blue text-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-miro-bluePressed transition-colors shadow-sm"
                             title="发送"
                           >
-                            {isAskingAI ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}
+                            {isAskingAI ? <Loader2 className="w-6 h-6 animate-spin" /> : <Send className="w-6 h-6" />}
                           </button>
                         </div>
                       </div>
-                    </motion.div>
+                    </div>
                   )}
-                </>
-              )}
-
-              {!isFlipped ? (
-                <div className="p-6 bg-slate-50/50 dark:bg-black/20 border-t border-miro-border/40 dark:border-white/10 relative z-10 flex justify-center">
-                  <button
-                    onClick={() => setIsFlipped(true)}
-                    className="w-full md:w-auto min-w-[200px] px-8 py-4 bg-miro-blue text-white rounded-[8px] font-display font-bold text-[17.5px] hover:bg-miro-bluePressed transition-colors shadow-soft"
-                  >
-                    查看答案
-                  </button>
                 </div>
-              ) : (
-                <div className="p-6 bg-white/50 dark:bg-black/20 border-t border-miro-border/20 dark:border-white/10 relative z-10">
-                  <p className="text-center text-[14px] font-bold text-miro-slate dark:text-slate-400 mb-4 tracking-widest uppercase">评估掌握程度</p>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto">
-                    <button
-                      onClick={() => handleMastery(0)}
-                      className="flex flex-col items-center justify-center p-4 bg-white dark:bg-[#111] border border-miro-border/40 dark:border-white/10 rounded-[12px] hover:border-pastel-coral-dark dark:hover:border-pastel-coral-light hover:bg-pastel-red-light/30 transition-all group shadow-sm hover:shadow-soft"
-                    >
-                      <XCircle className="w-8 h-8 text-pastel-coral-dark dark:text-pastel-coral-light mb-3 group-hover:scale-110 transition-transform" />
-                      <span className="font-bold text-miro-black dark:text-slate-300 group-hover:text-pastel-coral-dark dark:group-hover:text-pastel-coral-light">未掌握</span>
-                    </button>
-                    <button
-                      onClick={() => handleMastery(1)}
-                      className="flex flex-col items-center justify-center p-4 bg-white dark:bg-[#111] border border-miro-border/40 dark:border-white/10 rounded-[12px] hover:border-pastel-yellow-dark dark:hover:border-pastel-orange-light hover:bg-pastel-orange-light/30 transition-all group shadow-sm hover:shadow-soft"
-                    >
-                      <HelpCircle className="w-8 h-8 text-pastel-yellow-dark dark:text-pastel-orange-light mb-3 group-hover:scale-110 transition-transform" />
-                      <span className="font-bold text-miro-black dark:text-slate-300 group-hover:text-pastel-yellow-dark dark:group-hover:text-pastel-orange-light">模糊</span>
-                    </button>
-                    <button
-                      onClick={() => handleMastery(2)}
-                      className="flex flex-col items-center justify-center p-4 bg-white dark:bg-[#111] border border-miro-border/40 dark:border-white/10 rounded-[12px] hover:border-miro-success hover:bg-miro-success/10 transition-all group shadow-sm hover:shadow-soft"
-                    >
-                      <CheckCircle2 className="w-8 h-8 text-miro-success mb-3 group-hover:scale-110 transition-transform" />
-                      <span className="font-bold text-miro-black dark:text-slate-300 group-hover:text-miro-success">已掌握</span>
-                    </button>
-                    <button
-                      onClick={() => setAiChatOpen(true)}
-                      className={clsx(
-                        "flex flex-col items-center justify-center p-4 bg-white dark:bg-[#111] border border-miro-border/40 dark:border-white/10 rounded-[12px] transition-all group shadow-sm hover:shadow-soft",
-                        aiChatOpen
-                          ? "border-miro-blue/60 bg-miro-blue/5"
-                          : "hover:border-miro-blue/60 hover:bg-miro-blue/5"
-                      )}
-                    >
-                      <MessageCircle className="w-8 h-8 text-miro-blue mb-3 group-hover:scale-110 transition-transform" />
-                      <span className="font-bold text-miro-black dark:text-slate-300 group-hover:text-miro-blue">问 AI</span>
-                    </button>
+
+                <div className="w-full h-full flex flex-col">
+                  <div className="rounded-[24px] glass-panel border border-miro-border/40 dark:border-white/10 p-6 md:p-7 shadow-soft h-full">
+                    <div className="text-[14px] font-bold text-miro-slate dark:text-slate-400 mb-5 tracking-widest uppercase text-center">评估掌握程度</div>
+                    <div className="flex flex-col gap-4">
+                      <button
+                        onClick={() => handleMastery(0)}
+                        className="flex flex-col items-center justify-center p-4 bg-white dark:bg-[#111] border border-miro-border/40 dark:border-white/10 rounded-[12px] hover:border-pastel-coral-dark dark:hover:border-pastel-coral-light hover:bg-pastel-red-light/30 transition-all group shadow-sm hover:shadow-soft"
+                      >
+                        <XCircle className="w-8 h-8 text-pastel-coral-dark dark:text-pastel-coral-light mb-3 group-hover:scale-110 transition-transform" />
+                        <span className="font-bold text-miro-black dark:text-slate-300 group-hover:text-pastel-coral-dark dark:group-hover:text-pastel-coral-light">未掌握</span>
+                      </button>
+                      <button
+                        onClick={() => handleMastery(1)}
+                        className="flex flex-col items-center justify-center p-4 bg-white dark:bg-[#111] border border-miro-border/40 dark:border-white/10 rounded-[12px] hover:border-pastel-yellow-dark dark:hover:border-pastel-orange-light hover:bg-pastel-orange-light/30 transition-all group shadow-sm hover:shadow-soft"
+                      >
+                        <HelpCircle className="w-8 h-8 text-pastel-yellow-dark dark:text-pastel-orange-light mb-3 group-hover:scale-110 transition-transform" />
+                        <span className="font-bold text-miro-black dark:text-slate-300 group-hover:text-pastel-yellow-dark dark:group-hover:text-pastel-orange-light">模糊</span>
+                      </button>
+                      <button
+                        onClick={() => handleMastery(2)}
+                        className="flex flex-col items-center justify-center p-4 bg-white dark:bg-[#111] border border-miro-border/40 dark:border-white/10 rounded-[12px] hover:border-miro-success hover:bg-miro-success/10 transition-all group shadow-sm hover:shadow-soft"
+                      >
+                        <CheckCircle2 className="w-8 h-8 text-miro-success mb-3 group-hover:scale-110 transition-transform" />
+                        <span className="font-bold text-miro-black dark:text-slate-300 group-hover:text-miro-success">已掌握</span>
+                      </button>
+                      <button
+                        onClick={() => setAiChatOpen(true)}
+                        className="flex flex-col items-center justify-center p-4 bg-white dark:bg-[#111] border border-miro-border/40 dark:border-white/10 rounded-[12px] hover:border-miro-blue/60 hover:bg-miro-blue/5 transition-all group shadow-sm hover:shadow-soft"
+                      >
+                        <MessageCircle className="w-8 h-8 text-miro-blue mb-3 group-hover:scale-110 transition-transform" />
+                        <span className="font-bold text-miro-black dark:text-slate-300 group-hover:text-miro-blue">问 AI</span>
+                      </button>
+                    </div>
                   </div>
                 </div>
-              )}
-            </div>
+              </div>
+            )}
           </motion.div>
         </AnimatePresence>
       </main>
