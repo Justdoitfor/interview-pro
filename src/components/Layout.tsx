@@ -28,14 +28,14 @@ export default function Layout() {
           >
             {/* Logo Area */}
             <div className="flex flex-col items-center justify-center pt-8 pb-6 relative">
-              <div className="flex flex-col items-center gap-3">
-                <img src="/src/assets/nm.svg" alt="fkcoding" className="w-10 h-10 object-contain" />
+              <div className="flex flex-col items-center gap-2">
+                <img src="/src/assets/nm.svg" alt="fkcoding logo" className="w-16 h-16 object-contain" />
                 <AnimatePresence>
                   <motion.span
                     initial={{ opacity: 0, scale: 0.9 }}
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.9 }}
-                    className="text-[24px] font-display font-bold text-miro-black dark:text-white whitespace-nowrap tracking-[-0.72px]"
+                    className="text-[28px] font-display font-bold text-miro-black dark:text-white whitespace-nowrap tracking-[-1px] leading-none"
                   >
                     fkcoding
                   </motion.span>
@@ -60,7 +60,7 @@ export default function Layout() {
             className="flex-shrink-0 h-screen sticky top-0 bg-white dark:bg-miro-black border-r border-miro-border/40 shadow-ring z-40 overflow-hidden flex flex-col"
           >
             <div className="flex flex-col items-center justify-center pt-8 pb-6 relative">
-              <img src="/src/assets/nm.svg" alt="fkcoding" className="w-8 h-8 object-contain mb-4" />
+              <img src="/src/assets/nm.svg" alt="fkcoding logo" className="w-10 h-10 object-contain mb-4" />
               <button 
                 onClick={toggleSidebar}
                 className="p-2 text-miro-slate hover:bg-slate-100 dark:hover:bg-white/10 rounded-lg transition-colors"
